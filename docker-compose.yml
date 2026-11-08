@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tomatimer-app
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev -- --host 0.0.0.0
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tomatimer-test
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - CI=true
+    command: npm run test:run
