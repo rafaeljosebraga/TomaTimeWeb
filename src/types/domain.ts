@@ -43,11 +43,64 @@ export type PresetValidationErrors = {
   longBreakMinutes?: string[];
 };
 
-export type ValidationResult<T> =
+export type ValidationResult<T, E = PresetValidationErrors> =
   | { isValid: true; data: T }
-  | { isValid: false; errors: PresetValidationErrors };
+  | { isValid: false; errors: E };
 
 // Resultado padronizado para operações de armazenamento (exclusão, mutações)
 export type StorageActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+// Estados permitidos da Tarefa
+export const TASK_STATES = [
+  "backlog",
+  "a fazer",
+  "em execução",
+  "concluída",
+  "cancelada",
+] as const;
+
+export type TaskState = (typeof TASK_STATES)[number];
+
+// Níveis de prioridade permitidos da Tarefa
+export const TASK_PRIORITIES = [
+  "baixa",
+  "média",
+  "alta",
+] as const;
+
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+// Entidade Tarefa
+export type Task = {
+  id: string;
+  title: string; // Obrigatório, entre 1 e 100 caracteres
+  state: TaskState; // backlog, a fazer, em execução, concluída, cancelada
+  priority: TaskPriority; // baixa, média, alta
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+};
+
+// Erros de validação de tarefas
+export type TaskValidationErrors = {
+  title?: string[];
+  state?: string[];
+  priority?: string[];
+};
+
+export type TaskValidationResult<T = Task> = ValidationResult<T, TaskValidationErrors>;
+
+export type CreateTaskInput = {
+  title: string;
+  state?: TaskState;
+  priority?: TaskPriority;
+  id?: string;
+  createdAt?: string;
+};
+
+export type UpdateTaskInput = {
+  title?: string;
+  state?: TaskState;
+  priority?: TaskPriority;
+};
