@@ -44,6 +44,13 @@ import {
   loadTasks,
   updateTask,
 } from "@/lib/storage/tasks-storage";
+import { sortTasks } from "@/lib/domain/tasks-ordering";
+
+type PendingDelete = {
+  type: "preset" | "task";
+  id: string;
+  name: string;
+};
 
 type PresetFormData = {
   name: string;
@@ -103,6 +110,7 @@ export function App() {
   const [taskFormData, setTaskFormData] = useState<TaskFormData>(INITIAL_TASK_FORM);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskFormErrors, setTaskFormErrors] = useState<TaskValidationErrors>({});
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
   // Sincroniza o temporizador a cada segundo quando estiver rodando
   useEffect(() => {
@@ -243,32 +251,72 @@ export function App() {
     }
   }
 
-  // Exclusão de preset
-  function handleDeletePreset(id: string) {
-    const result = deletePreset(id);
-    if (!result.success) {
-      setGlobalMessage(`Erro: ${result.error}`);
-      return;
+  // Solicitação e confirmação de exclusão explícita
+  function handleRequestDeletePreset(preset: TimerPreset) {
+    setPendingDelete({
+      type: "preset",
+      id: preset.id,
+      name: preset.name,
+    });
+  }
+
+  function handleRequestDeleteTask(task: Task) {
+    setPendingDelete({
+      type: "task",
+      id: task.id,
+      name: task.title,
+    });
+  }
+
+  function handleCancelDelete() {
+    setPendingDelete(null);
+  }
+
+  function handleConfirmDelete() {
+    if (!pendingDelete) return;
+
+    if (pendingDelete.type === "preset") {
+      const result = deletePreset(pendingDelete.id);
+      if (!result.success) {
+        setGlobalMessage(`Erro: ${result.error}`);
+        setPendingDelete(null);
+        return;
+      }
+
+      const reloaded = loadPresets();
+      const newActiveId = getActivePresetId();
+      setPresets(reloaded);
+      setActiveId(newActiveId);
+
+      // Se o ativo foi excluído, carrega o novo ativo no timer
+      if (timer.preset.id === pendingDelete.id) {
+        const newActivePreset = getPresetById(newActiveId) ?? reloaded[0]!;
+        const newTimer = createSessionTimer(newActivePreset);
+        setTimer(newTimer);
+        saveSessionTimer(newTimer);
+      }
+
+      if (editingId === pendingDelete.id) {
+        handleCancelEdit();
+      }
+
+      setGlobalMessage(`Preset "${pendingDelete.name}" excluído com sucesso.`);
+    } else if (pendingDelete.type === "task") {
+      const result = deleteTask(pendingDelete.id);
+      if (!result.success) {
+        setGlobalMessage(result.error);
+        setPendingDelete(null);
+        return;
+      }
+
+      setTasks(loadTasks());
+      if (editingTaskId === pendingDelete.id) {
+        handleCancelEditTask();
+      }
+      setGlobalMessage(`Tarefa "${pendingDelete.name}" excluída com sucesso.`);
     }
 
-    const reloaded = loadPresets();
-    const newActiveId = getActivePresetId();
-    setPresets(reloaded);
-    setActiveId(newActiveId);
-
-    // Se o ativo foi excluído, carrega o novo ativo no timer
-    if (timer.preset.id === id) {
-      const newActivePreset = getPresetById(newActiveId) ?? reloaded[0]!;
-      const newTimer = createSessionTimer(newActivePreset);
-      setTimer(newTimer);
-      saveSessionTimer(newTimer);
-    }
-
-    if (editingId === id) {
-      handleCancelEdit();
-    }
-
-    setGlobalMessage("Preset excluído com sucesso.");
+    setPendingDelete(null);
   }
 
   // Handlers para Gerenciamento de Tarefas
@@ -316,19 +364,6 @@ export function App() {
     setTaskFormErrors({});
   }
 
-  function handleDeleteTask(id: string) {
-    const result = deleteTask(id);
-    if (!result.success) {
-      setGlobalMessage(result.error);
-      return;
-    }
-
-    setTasks(loadTasks());
-    if (editingTaskId === id) {
-      handleCancelEditTask();
-    }
-    setGlobalMessage("Tarefa excluída com sucesso.");
-  }
 
   function handleQuickChangeTaskState(id: string, newState: TaskState) {
     const result = updateTask(id, { state: newState });
@@ -566,7 +601,7 @@ export function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeletePreset(preset.id)}
+                      onClick={() => handleRequestDeletePreset(preset)}
                     >
                       Excluir
                     </button>
@@ -853,7 +888,7 @@ export function App() {
               </tr>
             </thead>
             <tbody>
-              {tasks.map((task) => (
+              {sortTasks(tasks).map((task) => (
                 <tr key={task.id}>
                   <td>
                     <strong>{task.title}</strong>
@@ -909,7 +944,7 @@ export function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteTask(task.id)}
+                      onClick={() => handleRequestDeleteTask(task)}
                     >
                       Excluir
                     </button>
@@ -920,6 +955,73 @@ export function App() {
           </table>
         )}
       </section>
+
+      {/* DIÁLOGO DE CONFIRMAÇÃO EXPLÍCITA DE EXCLUSÃO */}
+      {pendingDelete && (
+        <aside
+          role="alertdialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: "24px",
+              borderRadius: "6px",
+              maxWidth: "480px",
+              width: "90%",
+              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            <h3 style={{ marginTop: 0, color: "#d9534f" }}>
+              Confirmar Exclusão
+            </h3>
+            <p>
+              Tem certeza de que deseja excluir permanentemente o{" "}
+              {pendingDelete.type === "preset" ? "preset" : "tarefa"}{" "}
+              <strong>"{pendingDelete.name}"</strong>? Esta ação não pode ser
+              desfeita.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "flex-end",
+                marginTop: "16px",
+              }}
+            >
+              <button type="button" onClick={handleCancelDelete}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                style={{
+                  background: "#d9534f",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                  borderRadius: "4px",
+                }}
+              >
+                Confirmar Exclusão
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
     </main>
   );
 }

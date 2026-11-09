@@ -10,6 +10,7 @@ import type {
   UpdateTaskInput,
 } from "@/types/domain";
 import { validateTask } from "@/lib/domain/validate-task";
+import { sortTasks } from "@/lib/domain/tasks-ordering";
 
 export const TASK_STORAGE_KEYS = {
   TASKS: "tomatimer:tasks",
@@ -69,10 +70,14 @@ export function loadTasks(): Task[] {
       }
     }
 
-    return validTasks;
+    return sortTasks(validTasks);
   } catch {
     return [];
   }
+}
+
+export function getOrderedTasks(tasks?: Task[]): Task[] {
+  return sortTasks(tasks ?? loadTasks());
 }
 
 export function getTaskById(id: string): Task | null {
