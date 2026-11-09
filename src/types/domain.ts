@@ -20,7 +20,7 @@ export type TimerPreset = {
   longBreakMinutes: number; // TPL: 1 a 60 min
 };
 
-// Temporizador da Sessão controlado por Timestamps (Unix Epoch em milissegundos)
+// Temporizador da Sessão controlado por Timestamps
 export type SessionTimer = {
   preset: TimerPreset;
   stage: SessionStage;
@@ -46,3 +46,8 @@ export type PresetValidationErrors = {
 export type ValidationResult<T> =
   | { isValid: true; data: T }
   | { isValid: false; errors: PresetValidationErrors };
+
+// Resultado padronizado para operações de armazenamento (exclusão, mutações)
+export type StorageActionResult<T = void> =
+  | { success: true; data: T }
+  | { success: false; error: string };

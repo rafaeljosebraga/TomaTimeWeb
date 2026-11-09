@@ -92,6 +92,13 @@ export function resetSessionTimer(timer: SessionTimer): SessionTimer {
   };
 }
 
+export function resetCompletedCycles(timer: SessionTimer): SessionTimer {
+  return {
+    ...timer,
+    completedCycles: 0,
+  };
+}
+
 export function getRemainingSeconds(
   timer: SessionTimer,
   now: number = Date.now(),

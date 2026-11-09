@@ -3,6 +3,7 @@ import {
   createSessionTimer,
   getRemainingSeconds,
   pauseSessionTimer,
+  resetCompletedCycles,
   resetSessionTimer,
   resumeSessionTimer,
   startSessionTimer,
@@ -159,5 +160,16 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
     expect(reset.startedAt).toBeNull();
     expect(reset.endsAt).toBeNull();
     expect(reset.remainingMs).toBe(25 * 60 * 1000);
+  });
+
+  it("deve zerar os ciclos concluídos com resetCompletedCycles", () => {
+    const timer = {
+      ...createSessionTimer(preset),
+      completedCycles: 7,
+    };
+
+    const resetTimer = resetCompletedCycles(timer);
+    expect(resetTimer.completedCycles).toBe(0);
+    expect(resetTimer.stage).toBe("TF");
   });
 });
