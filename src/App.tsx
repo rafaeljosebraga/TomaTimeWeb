@@ -343,7 +343,7 @@ export function App() {
           {timer.phase === "paused" && (
             <>
               <button type="button" onClick={handleResume}>
-                Continuar
+                Retomar
               </button>
               <button type="button" onClick={handleReset}>
                 Reiniciar
