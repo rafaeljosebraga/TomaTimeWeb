@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   createSessionTimer,
+  getCyclesUntilNextLongBreak,
+  getLongBreakStatusMessage,
   getRemainingSeconds,
   pauseSessionTimer,
   resetCompletedCycles,
   resetSessionTimer,
   resumeSessionTimer,
+  skipSessionStage,
   startSessionTimer,
   tickSessionTimer,
 } from "./session-timer";
@@ -171,5 +174,108 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
     const resetTimer = resetCompletedCycles(timer);
     expect(resetTimer.completedCycles).toBe(0);
     expect(resetTimer.stage).toBe("TF");
+  });
+
+  describe("skipSessionStage (Pular fase manualmente)", () => {
+    it("deve avançar manualmente de TF para TPC e incrementar ciclo", () => {
+      const timer = startSessionTimer(createSessionTimer(preset), BASE_TIMESTAMP);
+      expect(timer.stage).toBe("TF");
+      expect(timer.completedCycles).toBe(0);
+
+      const skipped = skipSessionStage(timer);
+
+      expect(skipped.stage).toBe("TPC");
+      expect(skipped.phase).toBe("idle");
+      expect(skipped.completedCycles).toBe(1);
+      expect(skipped.durationMs).toBe(5 * 60 * 1000);
+      expect(skipped.remainingMs).toBe(5 * 60 * 1000);
+      expect(skipped.startedAt).toBeNull();
+      expect(skipped.endsAt).toBeNull();
+    });
+
+    it("deve avançar manualmente de TF para TPL quando a meta de ciclos for atingida", () => {
+      const timer: typeof preset extends unknown ? ReturnType<typeof createSessionTimer> : never = {
+        ...createSessionTimer(preset),
+        completedCycles: 3,
+      };
+
+      const skipped = skipSessionStage(timer);
+
+      expect(skipped.stage).toBe("TPL");
+      expect(skipped.completedCycles).toBe(4);
+      expect(skipped.durationMs).toBe(15 * 60 * 1000);
+      expect(skipped.remainingMs).toBe(15 * 60 * 1000);
+    });
+
+    it("deve avançar manualmente de TPC para TF", () => {
+      const shortBreakTimer = {
+        ...createSessionTimer(preset),
+        stage: "TPC" as const,
+        completedCycles: 1,
+      };
+
+      const skipped = skipSessionStage(shortBreakTimer);
+
+      expect(skipped.stage).toBe("TF");
+      expect(skipped.durationMs).toBe(25 * 60 * 1000);
+      expect(skipped.remainingMs).toBe(25 * 60 * 1000);
+      expect(skipped.completedCycles).toBe(1); // não incrementa em pausas
+    });
+
+    it("deve avançar manualmente de TPL para TF", () => {
+      const longBreakTimer = {
+        ...createSessionTimer(preset),
+        stage: "TPL" as const,
+        completedCycles: 4,
+      };
+
+      const skipped = skipSessionStage(longBreakTimer);
+
+      expect(skipped.stage).toBe("TF");
+      expect(skipped.durationMs).toBe(25 * 60 * 1000);
+      expect(skipped.remainingMs).toBe(25 * 60 * 1000);
+      expect(skipped.completedCycles).toBe(4);
+    });
+  });
+
+  describe("Cálculo e Mensagem da Próxima Pausa Longa", () => {
+    it("deve calcular corretamente os ciclos restantes após múltiplos de pausa longa (ex: 15 concluídos com meta 3)", () => {
+      // 15 concluídos com meta 3: acabou de passar por uma pausa longa, faltam 3 para a próxima!
+      expect(getCyclesUntilNextLongBreak(15, 3)).toBe(3);
+      expect(getCyclesUntilNextLongBreak(0, 3)).toBe(3);
+      expect(getCyclesUntilNextLongBreak(1, 3)).toBe(2);
+      expect(getCyclesUntilNextLongBreak(2, 3)).toBe(1);
+    });
+
+    it("deve gerar a mensagem contextual correta para o usuário", () => {
+      const timerWith3Meta = {
+        ...createSessionTimer({ ...preset, cyclesBeforeLongBreak: 3 }),
+        completedCycles: 15,
+        stage: "TF" as const,
+      };
+
+      // Logo após a pausa longa no ciclo 15, faltam 3 ciclos
+      expect(getLongBreakStatusMessage(timerWith3Meta)).toBe(
+        "Faltam 3 ciclos de foco para a próxima Pausa Longa.",
+      );
+
+      // Faltando 1 ciclo de foco
+      const timerWith1Remaining = {
+        ...timerWith3Meta,
+        completedCycles: 17, // 17 % 3 = 2 -> falta 1
+      };
+      expect(getLongBreakStatusMessage(timerWith1Remaining)).toBe(
+        "Falta 1 ciclo de foco (ao concluir este foco, o descanso será a Pausa Longa!).",
+      );
+
+      // Quando já está na pausa longa
+      const timerInLongBreak = {
+        ...timerWith3Meta,
+        stage: "TPL" as const,
+      };
+      expect(getLongBreakStatusMessage(timerInLongBreak)).toBe(
+        "Você está na Pausa Longa agora.",
+      );
+    });
   });
 });

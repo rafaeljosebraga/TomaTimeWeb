@@ -8,11 +8,13 @@ import type {
 } from "@/types/domain";
 import {
   createSessionTimer,
+  getLongBreakStatusMessage,
   getRemainingSeconds,
   pauseSessionTimer,
   resetCompletedCycles,
   resetSessionTimer,
   resumeSessionTimer,
+  skipSessionStage,
   startSessionTimer,
   tickSessionTimer,
 } from "@/lib/domain/session-timer";
@@ -118,6 +120,13 @@ export function App() {
     setTimer(updated);
     saveSessionTimer(updated);
     setGlobalMessage("Contador de ciclos de foco concluídos foi zerado.");
+  }
+
+  function handleSkipStage() {
+    const updated = skipSessionStage(timer);
+    setTimer(updated);
+    saveSessionTimer(updated);
+    setGlobalMessage(`Fase pulada com sucesso. Próxima fase: ${stageLabels[updated.stage]}.`);
   }
 
   // Troca de preset ativo
@@ -240,9 +249,6 @@ export function App() {
     completed: "Estágio Concluído!",
   };
 
-  const cyclesToLongBreak =
-    timer.preset.cyclesBeforeLongBreak -
-    (timer.completedCycles % timer.preset.cyclesBeforeLongBreak);
 
   return (
     <main style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
@@ -300,10 +306,7 @@ export function App() {
           </p>
           <p>
             <strong>Para a próxima Pausa Longa:</strong>{" "}
-            {cyclesToLongBreak === timer.preset.cyclesBeforeLongBreak &&
-            timer.completedCycles > 0
-              ? "Próximo descanso já será a Pausa Longa!"
-              : `Faltam ${cyclesToLongBreak} ciclo(s) de foco`}
+            {getLongBreakStatusMessage(timer)}
           </p>
         </div>
 
@@ -361,6 +364,14 @@ export function App() {
               </button>
             </>
           )}
+
+          <button
+            type="button"
+            onClick={handleSkipStage}
+            title="Avançar manualmente para a próxima fase prevista"
+          >
+            Pular Fase ⏭
+          </button>
         </div>
       </section>
 

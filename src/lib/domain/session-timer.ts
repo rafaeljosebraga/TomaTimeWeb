@@ -99,6 +99,71 @@ export function resetCompletedCycles(timer: SessionTimer): SessionTimer {
   };
 }
 
+// Retorna quantos ciclos de foco faltam para atingir a próxima Pausa Longa
+export function getCyclesUntilNextLongBreak(
+  completedCycles: number,
+  cyclesBeforeLongBreak: number,
+): number {
+  const remainder = completedCycles % cyclesBeforeLongBreak;
+  return remainder === 0 ? cyclesBeforeLongBreak : cyclesBeforeLongBreak - remainder;
+}
+
+// Retorna uma mensagem clara e contextual sobre a próxima Pausa Longa
+export function getLongBreakStatusMessage(timer: SessionTimer): string {
+  if (timer.stage === "TPL") {
+    return "Você está na Pausa Longa agora.";
+  }
+
+  const cyclesRemaining = getCyclesUntilNextLongBreak(
+    timer.completedCycles,
+    timer.preset.cyclesBeforeLongBreak,
+  );
+
+  if (cyclesRemaining === 1) {
+    if (timer.stage === "TF") {
+      return "Falta 1 ciclo de foco (ao concluir este foco, o descanso será a Pausa Longa!).";
+    }
+    return "Falta 1 ciclo de foco para a próxima Pausa Longa.";
+  }
+
+  return `Faltam ${cyclesRemaining} ciclos de foco para a próxima Pausa Longa.`;
+}
+
+// Avança manualmente da fase atual para a próxima fase prevista do fluxo
+export function skipSessionStage(timer: SessionTimer): SessionTimer {
+  if (timer.stage === "TF") {
+    const nextCompletedCycles = timer.completedCycles + 1;
+    const isLongBreak =
+      nextCompletedCycles % timer.preset.cyclesBeforeLongBreak === 0;
+    const nextStage: SessionStage = isLongBreak ? "TPL" : "TPC";
+    const nextDurationMs = getStageDurationMs(timer.preset, nextStage);
+
+    return {
+      ...timer,
+      stage: nextStage,
+      phase: "idle",
+      completedCycles: nextCompletedCycles,
+      startedAt: null,
+      endsAt: null,
+      durationMs: nextDurationMs,
+      remainingMs: nextDurationMs,
+    };
+  }
+
+  // Se estava em TPC ou TPL, a próxima fase prevista é sempre TF (Tempo de Foco)
+  const focusDurationMs = getStageDurationMs(timer.preset, "TF");
+
+  return {
+    ...timer,
+    stage: "TF",
+    phase: "idle",
+    startedAt: null,
+    endsAt: null,
+    durationMs: focusDurationMs,
+    remainingMs: focusDurationMs,
+  };
+}
+
 export function getRemainingSeconds(
   timer: SessionTimer,
   now: number = Date.now(),
