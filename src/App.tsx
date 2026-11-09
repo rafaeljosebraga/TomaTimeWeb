@@ -1,10 +1,16 @@
 // src/App.tsx
 // Interface simples em HTML nativo para exercitar as capacidades do Tomatimer.
 import { useEffect, useState } from "react";
-import type {
-  PresetValidationErrors,
-  SessionTimer,
-  TimerPreset,
+import {
+  TASK_PRIORITIES,
+  TASK_STATES,
+  type PresetValidationErrors,
+  type SessionTimer,
+  type Task,
+  type TaskPriority,
+  type TaskState,
+  type TaskValidationErrors,
+  type TimerPreset,
 } from "@/types/domain";
 import {
   createSessionTimer,
@@ -32,6 +38,12 @@ import {
   loadSessionTimer,
   saveSessionTimer,
 } from "@/lib/storage/session-storage";
+import {
+  createTask,
+  deleteTask,
+  loadTasks,
+  updateTask,
+} from "@/lib/storage/tasks-storage";
 
 type PresetFormData = {
   name: string;
@@ -47,6 +59,18 @@ const INITIAL_FORM_DATA: PresetFormData = {
   shortBreakMinutes: 5,
   cyclesBeforeLongBreak: 4,
   longBreakMinutes: 15,
+};
+
+type TaskFormData = {
+  title: string;
+  state: TaskState;
+  priority: TaskPriority;
+};
+
+const INITIAL_TASK_FORM: TaskFormData = {
+  title: "",
+  state: "backlog",
+  priority: "média",
 };
 
 function formatSeconds(seconds: number): string {
@@ -73,6 +97,12 @@ export function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<PresetValidationErrors>({});
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
+
+  // 4. Estado de Tarefas (Tasks)
+  const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
+  const [taskFormData, setTaskFormData] = useState<TaskFormData>(INITIAL_TASK_FORM);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [taskFormErrors, setTaskFormErrors] = useState<TaskValidationErrors>({});
 
   // Sincroniza o temporizador a cada segundo quando estiver rodando
   useEffect(() => {
@@ -241,6 +271,81 @@ export function App() {
     setGlobalMessage("Preset excluído com sucesso.");
   }
 
+  // Handlers para Gerenciamento de Tarefas
+  function handleTaskFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setTaskFormErrors({});
+
+    if (editingTaskId) {
+      const result = updateTask(editingTaskId, taskFormData);
+      if (!result.isValid) {
+        setTaskFormErrors(result.errors);
+        return;
+      }
+
+      setTasks(loadTasks());
+      setEditingTaskId(null);
+      setTaskFormData(INITIAL_TASK_FORM);
+      setGlobalMessage("Tarefa atualizada com sucesso.");
+    } else {
+      const result = createTask(taskFormData);
+      if (!result.isValid) {
+        setTaskFormErrors(result.errors);
+        return;
+      }
+
+      setTasks(loadTasks());
+      setTaskFormData(INITIAL_TASK_FORM);
+      setGlobalMessage("Tarefa criada com sucesso.");
+    }
+  }
+
+  function handleEditTask(task: Task) {
+    setEditingTaskId(task.id);
+    setTaskFormData({
+      title: task.title,
+      state: task.state,
+      priority: task.priority,
+    });
+    setTaskFormErrors({});
+  }
+
+  function handleCancelEditTask() {
+    setEditingTaskId(null);
+    setTaskFormData(INITIAL_TASK_FORM);
+    setTaskFormErrors({});
+  }
+
+  function handleDeleteTask(id: string) {
+    const result = deleteTask(id);
+    if (!result.success) {
+      setGlobalMessage(result.error);
+      return;
+    }
+
+    setTasks(loadTasks());
+    if (editingTaskId === id) {
+      handleCancelEditTask();
+    }
+    setGlobalMessage("Tarefa excluída com sucesso.");
+  }
+
+  function handleQuickChangeTaskState(id: string, newState: TaskState) {
+    const result = updateTask(id, { state: newState });
+    if (result.isValid) {
+      setTasks(loadTasks());
+      setGlobalMessage(`Estado da tarefa alterado para "${newState}".`);
+    }
+  }
+
+  function handleQuickChangeTaskPriority(id: string, newPriority: TaskPriority) {
+    const result = updateTask(id, { priority: newPriority });
+    if (result.isValid) {
+      setTasks(loadTasks());
+      setGlobalMessage(`Prioridade da tarefa alterada para "${newPriority}".`);
+    }
+  }
+
   const remainingSecs = getRemainingSeconds(timer);
   const remainingFormatted = formatSeconds(remainingSecs);
 
@@ -267,6 +372,26 @@ export function App() {
           timestamps e persistido exclusivamente em <code>localStorage</code>.
         </p>
       </header>
+
+      {/* AVISO: AMBIENTE DE TESTES / INTERFACE PROVISÓRIA */}
+      <aside
+        role="note"
+        style={{
+          background: "#fff3cd",
+          border: "2px solid #ffeeba",
+          color: "#856404",
+          padding: "16px",
+          marginBottom: "20px",
+          borderRadius: "4px",
+          fontSize: "15px",
+          lineHeight: "1.5",
+        }}
+      >
+        <strong>⚠️ AVISO IMPORTANTE:</strong> Esta página HTML é estritamente um
+        ambiente provisório de rascunho para testes manuais e depuração das
+        funcionalidades do temporizador, presets e tarefas. Esta tela <strong>deve ser completamente refeita</strong> na
+        etapa de interface definitiva.
+      </aside>
 
       {globalMessage && (
         <aside
@@ -591,6 +716,209 @@ export function App() {
             )}
           </div>
         </form>
+      </section>
+
+      <hr />
+
+      {/* SEÇÃO 4: GERENCIAMENTO DE TAREFAS (TASKS) */}
+      <section aria-labelledby="tasks-heading">
+        <h2 id="tasks-heading">Tarefas (Tasks)</h2>
+        <p>
+          Gerenciamento e persistência de tarefas no <code>localStorage</code> com
+          regras de negócio e valores estritamente em português.
+        </p>
+
+        {/* Formulário de Tarefa */}
+        <form
+          onSubmit={handleTaskFormSubmit}
+          style={{
+            background: "#f9f9f9",
+            border: "1px solid #ccc",
+            padding: "16px",
+            marginBottom: "20px",
+          }}
+        >
+          <h3>{editingTaskId ? "Editar Tarefa" : "Cadastrar Nova Tarefa"}</h3>
+
+          <div style={{ marginBottom: "12px" }}>
+            <label htmlFor="task-title-input" style={{ display: "block", fontWeight: "bold" }}>
+              Título da tarefa (1 a 100 caracteres):
+            </label>
+            <input
+              id="task-title-input"
+              type="text"
+              value={taskFormData.title}
+              onChange={(e) =>
+                setTaskFormData({ ...taskFormData, title: e.target.value })
+              }
+              placeholder="Ex: Estudar regras do módulo de tarefas"
+              maxLength={100}
+              style={{ width: "100%", padding: "6px", boxSizing: "border-box" }}
+            />
+            {taskFormErrors.title && (
+              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
+                {taskFormErrors.title.join(" ")}
+              </p>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
+            <div style={{ flex: 1 }}>
+              <label htmlFor="task-state-select" style={{ display: "block", fontWeight: "bold" }}>
+                Estado da tarefa:
+              </label>
+              <select
+                id="task-state-select"
+                value={taskFormData.state}
+                onChange={(e) =>
+                  setTaskFormData({
+                    ...taskFormData,
+                    state: e.target.value as TaskState,
+                  })
+                }
+                style={{ width: "100%", padding: "6px" }}
+              >
+                {TASK_STATES.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
+                  </option>
+                ))}
+              </select>
+              {taskFormErrors.state && (
+                <p role="alert" style={{ color: "red", margin: "4px 0" }}>
+                  {taskFormErrors.state.join(" ")}
+                </p>
+              )}
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <label htmlFor="task-priority-select" style={{ display: "block", fontWeight: "bold" }}>
+                Prioridade da tarefa:
+              </label>
+              <select
+                id="task-priority-select"
+                value={taskFormData.priority}
+                onChange={(e) =>
+                  setTaskFormData({
+                    ...taskFormData,
+                    priority: e.target.value as TaskPriority,
+                  })
+                }
+                style={{ width: "100%", padding: "6px" }}
+              >
+                {TASK_PRIORITIES.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority}
+                  </option>
+                ))}
+              </select>
+              {taskFormErrors.priority && (
+                <p role="alert" style={{ color: "red", margin: "4px 0" }}>
+                  {taskFormErrors.priority.join(" ")}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button type="submit">
+              {editingTaskId ? "Salvar Alterações da Tarefa" : "Criar Tarefa"}
+            </button>
+            {editingTaskId && (
+              <button type="button" onClick={handleCancelEditTask}>
+                Cancelar Edição
+              </button>
+            )}
+          </div>
+        </form>
+
+        {/* Listagem de Tarefas */}
+        {tasks.length === 0 ? (
+          <p>
+            <em>Nenhuma tarefa cadastrada no navegador até o momento.</em>
+          </p>
+        ) : (
+          <table
+            border={1}
+            cellPadding={8}
+            style={{ width: "100%", borderCollapse: "collapse" }}
+          >
+            <thead>
+              <tr style={{ background: "#eee" }}>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Prioridade</th>
+                <th>Criada em</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task.id}>
+                  <td>
+                    <strong>{task.title}</strong>
+                  </td>
+                  <td>
+                    <select
+                      value={task.state}
+                      onChange={(e) =>
+                        handleQuickChangeTaskState(
+                          task.id,
+                          e.target.value as TaskState,
+                        )
+                      }
+                      title="Alterar estado da tarefa rapidamente"
+                    >
+                      {TASK_STATES.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={task.priority}
+                      onChange={(e) =>
+                        handleQuickChangeTaskPriority(
+                          task.id,
+                          e.target.value as TaskPriority,
+                        )
+                      }
+                      title="Alterar prioridade da tarefa rapidamente"
+                    >
+                      {TASK_PRIORITIES.map((priority) => (
+                        <option key={priority} value={priority}>
+                          {priority}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <small>
+                      {new Date(task.createdAt).toLocaleString()}
+                    </small>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => handleEditTask(task)}
+                      style={{ marginRight: "6px" }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTask(task.id)}
+                    >
+                      Excluir
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
     </main>
   );
