@@ -8,6 +8,7 @@ import type {
 } from "@/types/domain";
 import {
   createSessionTimer,
+  endSessionTimer,
   getLongBreakStatusMessage,
   getRemainingSeconds,
   pauseSessionTimer,
@@ -127,6 +128,13 @@ export function App() {
     setTimer(updated);
     saveSessionTimer(updated);
     setGlobalMessage(`Fase pulada com sucesso. Próxima fase: ${stageLabels[updated.stage]}.`);
+  }
+
+  function handleEndSession() {
+    const updated = endSessionTimer(timer);
+    setTimer(updated);
+    saveSessionTimer(updated);
+    setGlobalMessage("Sessão ativa encerrada.");
   }
 
   // Troca de preset ativo
@@ -371,6 +379,14 @@ export function App() {
             title="Avançar manualmente para a próxima fase prevista"
           >
             Pular Fase ⏭
+          </button>
+
+          <button
+            type="button"
+            onClick={handleEndSession}
+            title="Finalizar a sessão ativa a qualquer momento"
+          >
+            Encerrar Sessão ⏹
           </button>
         </div>
       </section>

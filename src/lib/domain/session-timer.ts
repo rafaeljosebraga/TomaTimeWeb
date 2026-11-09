@@ -99,6 +99,11 @@ export function resetCompletedCycles(timer: SessionTimer): SessionTimer {
   };
 }
 
+// Finaliza a sessão ativa a qualquer momento, retornando o temporizador ao estado inicial
+export function endSessionTimer(timer: SessionTimer): SessionTimer {
+  return createSessionTimer(timer.preset);
+}
+
 // Retorna quantos ciclos de foco faltam para atingir a próxima Pausa Longa
 export function getCyclesUntilNextLongBreak(
   completedCycles: number,

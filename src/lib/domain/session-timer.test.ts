@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createSessionTimer,
+  endSessionTimer,
   getCyclesUntilNextLongBreak,
   getLongBreakStatusMessage,
   getRemainingSeconds,
@@ -276,6 +277,50 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
       expect(getLongBreakStatusMessage(timerInLongBreak)).toBe(
         "Você está na Pausa Longa agora.",
       );
+    });
+  });
+
+  describe("endSessionTimer (Encerrar sessão ativa a qualquer momento)", () => {
+    it("deve finalizar uma sessão em andamento (running) e retornar ao estado inicial", () => {
+      const runningTimer = startSessionTimer(createSessionTimer(preset), BASE_TIMESTAMP);
+      expect(runningTimer.phase).toBe("running");
+      expect(runningTimer.startedAt).not.toBeNull();
+      expect(runningTimer.endsAt).not.toBeNull();
+
+      const ended = endSessionTimer(runningTimer);
+
+      expect(ended.phase).toBe("idle");
+      expect(ended.stage).toBe("TF");
+      expect(ended.completedCycles).toBe(0);
+      expect(ended.startedAt).toBeNull();
+      expect(ended.endsAt).toBeNull();
+      expect(ended.durationMs).toBe(25 * 60 * 1000);
+      expect(ended.remainingMs).toBe(25 * 60 * 1000);
+    });
+
+    it("deve finalizar uma sessão que esteja em pausa (TPC ou TPL) com ciclos concluídos", () => {
+      const breakTimer = {
+        ...createSessionTimer(preset),
+        stage: "TPL" as const,
+        phase: "paused" as const,
+        completedCycles: 4,
+        remainingMs: 10 * 1000,
+      };
+
+      const ended = endSessionTimer(breakTimer);
+
+      expect(ended.phase).toBe("idle");
+      expect(ended.stage).toBe("TF");
+      expect(ended.completedCycles).toBe(0);
+      expect(ended.durationMs).toBe(25 * 60 * 1000);
+      expect(ended.remainingMs).toBe(25 * 60 * 1000);
+    });
+
+    it("deve ser idempotente quando chamado em uma sessão já idle", () => {
+      const idleTimer = createSessionTimer(preset);
+      const ended = endSessionTimer(idleTimer);
+
+      expect(ended).toEqual(idleTimer);
     });
   });
 });
