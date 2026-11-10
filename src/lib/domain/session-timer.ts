@@ -17,10 +17,12 @@ export function getStageDurationMs(
 }
 
 export function createSessionTimer(preset: TimerPreset): SessionTimer {
-  const durationMs = getStageDurationMs(preset, "TF");
+  // Snapshot isolado e imutável do preset exclusivo para a sessão ativa
+  const presetSnapshot: TimerPreset = { ...preset };
+  const durationMs = getStageDurationMs(presetSnapshot, "TF");
 
   return {
-    preset,
+    preset: presetSnapshot,
     stage: "TF",
     phase: "idle",
     completedCycles: 0,
@@ -134,12 +136,12 @@ export function getLongBreakStatusMessage(timer: SessionTimer): string {
   return `Faltam ${cyclesRemaining} ciclos de foco para a próxima Pausa Longa.`;
 }
 
-// Avança manualmente da fase atual para a próxima fase prevista do fluxo (UC06)
-// Regra RN-03: Pular uma fase de foco não incrementa a contagem de ciclos; pular pausa também não incrementa.
+// Avança manualmente da fase atual para a próxima fase prevista do fluxo.
+// Pular uma fase de foco não incrementa a contagem de ciclos; pular pausa também não incrementa.
 export function skipSessionStage(timer: SessionTimer): SessionTimer {
   if (timer.stage === "TF") {
     // Ao pular foco, vai para a pausa correspondente ao estado atual.
-    // Como a fase de foco NÃO foi concluída, completedCycles permanece inalterado (RN-03).
+    // Como a fase de foco não foi concluída, completedCycles permanece inalterado.
     // A próxima pausa é TPC (ou TPL se a meta de ciclos já estivesse atingida).
     const isLongBreak =
       timer.completedCycles > 0 &&
@@ -151,7 +153,6 @@ export function skipSessionStage(timer: SessionTimer): SessionTimer {
       ...timer,
       stage: nextStage,
       phase: "idle",
-      // completedCycles NÃO é incrementado (RN-03)
       startedAt: null,
       endsAt: null,
       durationMs: nextDurationMs,
@@ -166,7 +167,6 @@ export function skipSessionStage(timer: SessionTimer): SessionTimer {
     ...timer,
     stage: "TF",
     phase: "idle",
-    // completedCycles NÃO é incrementado (RN-03)
     startedAt: null,
     endsAt: null,
     durationMs: focusDurationMs,

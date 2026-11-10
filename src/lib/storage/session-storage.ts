@@ -111,10 +111,9 @@ export function loadSessionTimer(
       return createSessionTimer(activePreset);
     }
 
-    // RN-05: Preserva o snapshot do preset armazenado na sessão (imutável a alterações posteriores no preset)
-    const snapshotPreset = parsed.preset;
-
-    // Recalcula a duração do estágio atual com o snapshot do preset
+    // O preset da sessão é um snapshot imutável isolado da sessão ativa.
+    // Ele não se altera mesmo se o preset original for editado ou excluído da lista de presets.
+    const snapshotPreset: TimerPreset = { ...parsed.preset };
     const currentDurationMs = getStageDurationMs(
       snapshotPreset,
       parsed.stage,
