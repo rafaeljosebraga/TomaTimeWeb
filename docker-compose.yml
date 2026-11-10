@@ -5,13 +5,14 @@ services:
       dockerfile: Dockerfile
     container_name: tomatimer-app
     ports:
+      - "3000:3000"
       - "5173:5173"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
-    command: npm run dev -- --host 0.0.0.0
+    command: npm run dev -- -H 0.0.0.0
 
   test:
     build:
