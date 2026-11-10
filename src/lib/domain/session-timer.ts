@@ -102,8 +102,12 @@ export function resetCompletedCycles(timer: SessionTimer): SessionTimer {
 }
 
 // Finaliza a sessão ativa a qualquer momento, retornando o temporizador ao estado inicial
-export function endSessionTimer(timer: SessionTimer): SessionTimer {
-  return createSessionTimer(timer.preset);
+// Se um preset atualizado (espelho do storage) for fornecido, a nova sessão inicial assume esses dados
+export function endSessionTimer(
+  timer: SessionTimer,
+  latestPreset?: TimerPreset,
+): SessionTimer {
+  return createSessionTimer(latestPreset ?? timer.preset);
 }
 
 // Retorna quantos ciclos de foco faltam para atingir a próxima Pausa Longa
