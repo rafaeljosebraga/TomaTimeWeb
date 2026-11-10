@@ -108,7 +108,7 @@ export function TimerPanel({
         <div
           role="tablist"
           aria-label="Fase do temporizador"
-          className="inline-flex items-center gap-1 rounded-full bg-muted p-1"
+          className="inline-flex max-w-full flex-wrap justify-center items-center gap-1 rounded-full bg-muted p-1"
         >
           {STAGES.map((s) => {
             const isCurrent = timer.stage === s.stage;
@@ -117,7 +117,7 @@ export function TimerPanel({
                 key={s.stage}
                 role="tab"
                 aria-selected={isCurrent}
-                className={`rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+                className={`rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                   isCurrent
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground opacity-70"
@@ -239,10 +239,11 @@ export function TimerPanel({
             </div>
           )}
 
-          <div className="flex w-full gap-2 sm:w-auto sm:gap-3">
+          <div className="flex w-full max-w-sm flex-wrap justify-center gap-2 sm:gap-3">
             <Button
               variant="outline"
-              className="h-12 flex-1 sm:flex-none"
+              size="sm"
+              className="h-10 sm:h-11 flex-1 min-w-[100px] text-xs sm:text-sm font-medium"
               onClick={onSkipStage}
               aria-label="Pular fase atual"
               title="Avançar para a próxima fase"
@@ -252,7 +253,8 @@ export function TimerPanel({
             </Button>
             <Button
               variant="outline"
-              className="h-12 flex-1 sm:flex-none"
+              size="sm"
+              className="h-10 sm:h-11 flex-1 min-w-[100px] text-xs sm:text-sm font-medium"
               onClick={onResetCycles}
               aria-label="Reiniciar ciclo"
               title="Reiniciar contagem de ciclos"
@@ -262,7 +264,8 @@ export function TimerPanel({
             </Button>
             <Button
               variant="outline"
-              className="h-12 flex-1 sm:flex-none text-muted-foreground hover:text-foreground"
+              size="sm"
+              className="h-10 sm:h-11 flex-1 min-w-[100px] text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground"
               onClick={onEndSession}
               aria-label="Encerrar sessão ativa"
               title="Encerrar sessão"
