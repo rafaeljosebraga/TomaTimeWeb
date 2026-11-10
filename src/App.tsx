@@ -34,6 +34,7 @@ import {
 } from "@/lib/storage/presets-storage";
 import {
   clearSessionTimer,
+  hasStoredActiveSession,
   loadSessionTimer,
   saveSessionTimer,
 } from "@/lib/storage/session-storage";
@@ -49,6 +50,7 @@ import { TimerPanel } from "@/components/pomodoro/timer-panel";
 import { TaskPanel } from "@/components/pomodoro/task-panel";
 import { TaskDialog } from "@/components/pomodoro/task-dialog";
 import { DeleteDialog } from "@/components/pomodoro/delete-dialog";
+import { ConfirmDialog, type ConfirmAction } from "@/components/pomodoro/confirm-dialog";
 
 type PendingDelete = {
   type: "preset" | "task";
@@ -97,7 +99,11 @@ export function App() {
     getActivePresetId()
   );
 
-  // 2. Estado do temporizador de sessão (restaura do storage ou cria novo)
+  // 2. Estado do temporizador de sessão
+  const [isResumedSession, setIsResumedSession] = useState<boolean>(() =>
+    hasStoredActiveSession()
+  );
+
   const [timer, setTimer] = useState<SessionTimer>(() => {
     const active = getPresetById(getActivePresetId()) ?? loadPresets()[0]!;
     return loadSessionTimer(active);
@@ -118,6 +124,9 @@ export function App() {
 
   // 5. Estado de confirmação explícita de exclusão
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+
+  // 6. Estado de confirmação genérica
+  const [pendingConfirm, setPendingConfirm] = useState<ConfirmAction | null>(null);
 
   // Sincroniza o temporizador a cada segundo quando estiver rodando
   useEffect(() => {
@@ -185,10 +194,12 @@ export function App() {
   }
 
   function handleResetCycles() {
-    const updated = resetCompletedCycles(timer);
-    setTimer(updated);
-    saveSessionTimer(updated);
-    setGlobalMessage("Contador de ciclos de foco concluídos foi zerado.");
+    setPendingConfirm({
+      type: "resetCycles",
+      title: "Reiniciar Ciclos",
+      description: "Deseja realmente zerar a contagem de ciclos concluídos e retornar ao primeiro ciclo de foco?",
+      confirmLabel: "Reiniciar Ciclos",
+    });
   }
 
   function handleSkipStage() {
@@ -199,17 +210,53 @@ export function App() {
   }
 
   function handleEndSession() {
-    clearSessionTimer();
+    setPendingConfirm({
+      type: "endSession",
+      title: "Encerrar Sessão",
+      description: "Deseja realmente encerrar a sessão ativa? O progresso do temporizador será removido.",
+      confirmLabel: "Encerrar Sessão",
+      isDestructive: true,
+    });
+  }
 
-    // Sincroniza a nova sessão limpa com o espelho mais atualizado do preset no storage
-    const currentStoredPreset =
-      getPresetById(timer.preset.id) ??
-      getPresetById(activePresetId) ??
-      loadPresets()[0]!;
+  function handleDiscardResumedSession() {
+    setPendingConfirm({
+      type: "discardResumedSession",
+      title: "Descartar Sessão Retomada",
+      description: "Deseja descartar a sessão ativa retomada? Os dados em andamento serão apagados sem contabilização de progresso e o preset será liberado.",
+      confirmLabel: "Descartar Sessão",
+      isDestructive: true,
+    });
+  }
 
-    const updated = endSessionTimer(timer, currentStoredPreset);
-    setTimer(updated);
-    setGlobalMessage("Sessão ativa encerrada.");
+  function handleExecuteConfirmedAction() {
+    if (!pendingConfirm) return;
+
+    if (pendingConfirm.type === "resetCycles") {
+      const updated = resetCompletedCycles(timer);
+      setTimer(updated);
+      saveSessionTimer(updated);
+      setGlobalMessage("Contador de ciclos de foco concluídos foi zerado.");
+    } else if (pendingConfirm.type === "endSession" || pendingConfirm.type === "discardResumedSession") {
+      clearSessionTimer();
+      setIsResumedSession(false);
+
+      const currentStoredPreset =
+        getPresetById(timer.preset.id) ??
+        getPresetById(activePresetId) ??
+        loadPresets()[0]!;
+
+      const updated = endSessionTimer(timer, currentStoredPreset);
+      setTimer(updated);
+
+      if (pendingConfirm.type === "discardResumedSession") {
+        setGlobalMessage("Sessão retomada foi descartada com sucesso.");
+      } else {
+        setGlobalMessage("Sessão ativa encerrada.");
+      }
+    }
+
+    setPendingConfirm(null);
   }
 
   // Troca de preset ativo
@@ -436,6 +483,41 @@ export function App() {
           </div>
         </header>
 
+        {/* Aviso de Sessão Ativa Retomada (UC10 / UC11) */}
+        {isResumedSession && (timer.phase === "running" || timer.phase === "paused") && (
+          <div className="border-b border-primary/20 bg-primary/10">
+            <aside
+              role="alert"
+              className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-2 text-xs sm:px-6"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="size-4 text-primary shrink-0" aria-hidden />
+                <span>
+                  <strong>Sessão retomada automaticamente:</strong> Uma sessão anterior do preset "
+                  {timer.preset.name}" foi recuperada de onde parou.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDiscardResumedSession}
+                  className="rounded px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+                >
+                  Descartar sessão retomada
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsResumedSession(false)}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5 rounded-sm"
+                  aria-label="Dispensar aviso de retomada"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            </aside>
+          </div>
+        )}
+
         {/* Mensagem global de status / notificação acessível */}
         {globalMessage && (
           <div className="border-b border-border bg-muted/40">
@@ -518,6 +600,13 @@ export function App() {
           onFormDataChange={setTaskFormData}
           onSubmit={handleTaskFormSubmit}
           onCancel={handleCancelEditTask}
+        />
+
+        {/* Diálogo de Confirmação Genérica (UC07, UC08, UC11) */}
+        <ConfirmDialog
+          action={pendingConfirm}
+          onConfirm={handleExecuteConfirmedAction}
+          onCancel={() => setPendingConfirm(null)}
         />
 
         {/* Diálogo de Confirmação de Exclusão (Preset / Tarefa) */}

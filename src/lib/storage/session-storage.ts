@@ -37,6 +37,26 @@ export function clearSessionTimer(): void {
 }
 
 /**
+ * Verifica se existe uma sessão ativa salva em localStorage antes de ser carregada
+ */
+export function hasStoredActiveSession(): boolean {
+  try {
+    if (!isBrowserStorageAvailable()) return false;
+    const raw =
+      localStorage.getItem(SESSION_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_SESSION_STORAGE_KEY);
+    if (!raw) return false;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!isValidStoredSession(parsed)) return false;
+
+    return parsed.phase === "running" || parsed.phase === "paused";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Retorna o ID do preset atualmente em uso por uma sessão ativa
  * Regra RN-01 (bloqueio de edição/exclusão)
  */
