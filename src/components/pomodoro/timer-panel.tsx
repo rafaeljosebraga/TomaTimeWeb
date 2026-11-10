@@ -64,9 +64,9 @@ interface TimerPanelProps {
 }
 
 const STAGES: { stage: SessionStage; label: string }[] = [
-  { stage: "TF", label: "Tempo de Foco (TF)" },
-  { stage: "TPC", label: "Pausa Curta (TPC)" },
-  { stage: "TPL", label: "Pausa Longa (TPL)" },
+  { stage: "TF", label: "Tempo de Foco" },
+  { stage: "TPC", label: "Pausa Curta" },
+  { stage: "TPL", label: "Pausa Longa" },
 ];
 
 function formatSeconds(seconds: number): string {
@@ -117,10 +117,10 @@ export function TimerPanel({
                 key={s.stage}
                 role="tab"
                 aria-selected={isCurrent}
-                className={`rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                   isCurrent
                     ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground opacity-60"
+                    : "text-muted-foreground opacity-70"
                 }`}
               >
                 {s.label}
@@ -130,7 +130,7 @@ export function TimerPanel({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col items-center gap-7 px-0 pt-6">
+      <CardContent className="flex flex-col items-center gap-7 px-0 pt-4">
         {/* Temporizador Circular */}
         <CircularTimer
           stage={timer.stage}
@@ -252,6 +252,16 @@ export function TimerPanel({
             </Button>
             <Button
               variant="outline"
+              className="h-12 flex-1 sm:flex-none"
+              onClick={onResetCycles}
+              aria-label="Reiniciar ciclo"
+              title="Reiniciar contagem de ciclos"
+            >
+              <RotateCcw className="size-4" />
+              Reiniciar Ciclo
+            </Button>
+            <Button
+              variant="outline"
               className="h-12 flex-1 sm:flex-none text-muted-foreground hover:text-foreground"
               onClick={onEndSession}
               aria-label="Encerrar sessão ativa"
@@ -269,13 +279,13 @@ export function TimerPanel({
         <div className="flex w-full max-w-sm flex-col items-center gap-3 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
             <TimerIcon className="size-4 text-muted-foreground" aria-hidden />
-            <span className="text-sm font-medium">Preset ativo</span>
+            <span className="text-sm font-medium">Preset de estudo</span>
           </div>
 
           <div className="flex items-center gap-2">
             <Select value={activePresetId} onValueChange={onSelectActivePreset}>
               <SelectTrigger
-                className="h-9 w-44"
+                className="h-9 w-40"
                 aria-label="Selecionar preset do timer"
               >
                 <SelectValue placeholder="Escolha um preset" />
@@ -309,6 +319,15 @@ export function TimerPanel({
             />
           </div>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Pressione{" "}
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+            Espaço
+          </kbd>{" "}
+          para iniciar ou pausar · o ciclo reinicia após{" "}
+          {timer.preset.cyclesBeforeLongBreak} pomodoros
+        </p>
       </CardContent>
     </Card>
   );
