@@ -1,4 +1,5 @@
 // src/App.tsx
+"use client";
 
 import { useEffect, useState } from "react";
 import { Timer, AlertCircle, X } from "lucide-react";
