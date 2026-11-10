@@ -159,6 +159,23 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
   });
 
+  it("deve remover a sessão ativa do storage ao encerrar a sessão", () => {
+    // 1. Inicia uma sessão ativa e persiste
+    const runningSession = startSessionTimer(createSessionTimer(mockPreset), BASE_NOW);
+    saveSessionTimer(runningSession);
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).not.toBeNull();
+
+    // 2. Encerrar a sessão deve remover a sessão ativa do storage
+    clearSessionTimer();
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+
+    // 3. Ao recarregar a sessão após ter sido encerrada, inicia uma nova sessão limpa
+    const restored = loadSessionTimer(mockPreset, BASE_NOW);
+    expect(restored.phase).toBe("idle");
+    expect(restored.stage).toBe("TF");
+    expect(restored.completedCycles).toBe(0);
+  });
+
   describe("Snapshot isolado do Preset na Sessão Ativa", () => {
     it("deve manter o snapshot intacto mesmo se o preset original for editado", () => {
       // Inicia e salva a sessão com o preset original (25 minutos)
