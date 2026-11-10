@@ -13,7 +13,8 @@ import { validateTask } from "@/lib/domain/validate-task";
 import { sortTasks } from "@/lib/domain/tasks-ordering";
 
 export const TASK_STORAGE_KEYS = {
-  TASKS: "tomatimer:tasks",
+  TASKS: "pomodoro.tarefas",
+  LEGACY_TASKS: "tomatimer:tasks",
 } as const;
 
 function isBrowserStorageAvailable(): boolean {
@@ -36,7 +37,9 @@ export function loadTasks(): Task[] {
       return [];
     }
 
-    const raw = localStorage.getItem(TASK_STORAGE_KEYS.TASKS);
+    const raw =
+      localStorage.getItem(TASK_STORAGE_KEYS.TASKS) ??
+      localStorage.getItem(TASK_STORAGE_KEYS.LEGACY_TASKS);
     if (!raw) {
       return [];
     }
