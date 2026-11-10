@@ -134,12 +134,16 @@ export function getLongBreakStatusMessage(timer: SessionTimer): string {
   return `Faltam ${cyclesRemaining} ciclos de foco para a próxima Pausa Longa.`;
 }
 
-// Avança manualmente da fase atual para a próxima fase prevista do fluxo
+// Avança manualmente da fase atual para a próxima fase prevista do fluxo (UC06)
+// Regra RN-03: Pular uma fase de foco não incrementa a contagem de ciclos; pular pausa também não incrementa.
 export function skipSessionStage(timer: SessionTimer): SessionTimer {
   if (timer.stage === "TF") {
-    const nextCompletedCycles = timer.completedCycles + 1;
+    // Ao pular foco, vai para a pausa correspondente ao estado atual.
+    // Como a fase de foco NÃO foi concluída, completedCycles permanece inalterado (RN-03).
+    // A próxima pausa é TPC (ou TPL se a meta de ciclos já estivesse atingida).
     const isLongBreak =
-      nextCompletedCycles % timer.preset.cyclesBeforeLongBreak === 0;
+      timer.completedCycles > 0 &&
+      timer.completedCycles % timer.preset.cyclesBeforeLongBreak === 0;
     const nextStage: SessionStage = isLongBreak ? "TPL" : "TPC";
     const nextDurationMs = getStageDurationMs(timer.preset, nextStage);
 
@@ -147,7 +151,7 @@ export function skipSessionStage(timer: SessionTimer): SessionTimer {
       ...timer,
       stage: nextStage,
       phase: "idle",
-      completedCycles: nextCompletedCycles,
+      // completedCycles NÃO é incrementado (RN-03)
       startedAt: null,
       endsAt: null,
       durationMs: nextDurationMs,
@@ -162,6 +166,7 @@ export function skipSessionStage(timer: SessionTimer): SessionTimer {
     ...timer,
     stage: "TF",
     phase: "idle",
+    // completedCycles NÃO é incrementado (RN-03)
     startedAt: null,
     endsAt: null,
     durationMs: focusDurationMs,
