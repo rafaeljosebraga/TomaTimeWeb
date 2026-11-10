@@ -94,10 +94,19 @@ export function resetSessionTimer(timer: SessionTimer): SessionTimer {
   };
 }
 
+// Reinicia ciclos zera a contagem de ciclos e retorna ao primeiro ciclo de foco, mantendo o preset ativo.
 export function resetCompletedCycles(timer: SessionTimer): SessionTimer {
+  const focusDurationMs = getStageDurationMs(timer.preset, "TF");
+
   return {
     ...timer,
+    stage: "TF",
+    phase: "idle",
     completedCycles: 0,
+    startedAt: null,
+    endsAt: null,
+    durationMs: focusDurationMs,
+    remainingMs: focusDurationMs,
   };
 }
 

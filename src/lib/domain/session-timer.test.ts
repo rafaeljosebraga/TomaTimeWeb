@@ -167,15 +167,32 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
     expect(reset.remainingMs).toBe(25 * 60 * 1000);
   });
 
-  it("deve zerar os ciclos concluídos com resetCompletedCycles", () => {
-    const timer = {
+  it("deve zerar os ciclos concluídos e retornar ao primeiro ciclo de foco com resetCompletedCycles (RN-04 / UC07)", () => {
+    // Simula uma sessão que estava no estágio de Pausa Longa (TPL), em andamento e com 8 ciclos concluídos
+    const timerInLongBreak = {
       ...createSessionTimer(preset),
-      completedCycles: 7,
+      stage: "TPL" as const,
+      phase: "running" as const,
+      completedCycles: 8,
+      startedAt: BASE_TIMESTAMP,
+      endsAt: BASE_TIMESTAMP + 15 * 60 * 1000,
+      durationMs: 15 * 60 * 1000,
+      remainingMs: 10 * 60 * 1000,
     };
 
-    const resetTimer = resetCompletedCycles(timer);
+    const resetTimer = resetCompletedCycles(timerInLongBreak);
+
+    // Zera a contagem de ciclos concluídos
     expect(resetTimer.completedCycles).toBe(0);
+    // Retorna ao primeiro ciclo de foco (TF)
     expect(resetTimer.stage).toBe("TF");
+    expect(resetTimer.phase).toBe("idle");
+    expect(resetTimer.startedAt).toBeNull();
+    expect(resetTimer.endsAt).toBeNull();
+    // Restaura a duração e tempo restante para o tempo de foco do preset 25 min
+    expect(resetTimer.durationMs).toBe(25 * 60 * 1000);
+    expect(resetTimer.remainingMs).toBe(25 * 60 * 1000);
+    expect(getRemainingSeconds(resetTimer)).toBe(1500);
   });
 
   describe("skipSessionStage (Pular fase manualmente)", () => {
