@@ -226,14 +226,6 @@ export function App() {
       const reloaded = loadPresets();
       setPresets(reloaded);
 
-      // Se editou o preset atualmente ativo na sessão, recarrega os dados dele
-      if (editingId === activePresetId) {
-        setTimer((prev) => ({
-          ...prev,
-          preset: result.data,
-        }));
-      }
-
       setGlobalMessage(`Preset "${result.data.name}" atualizado com sucesso.`);
       handleCancelEdit();
     } else {
@@ -287,14 +279,6 @@ export function App() {
       const newActiveId = getActivePresetId();
       setPresets(reloaded);
       setActiveId(newActiveId);
-
-      // Se o ativo foi excluído, carrega o novo ativo no timer
-      if (timer.preset.id === pendingDelete.id) {
-        const newActivePreset = getPresetById(newActiveId) ?? reloaded[0]!;
-        const newTimer = createSessionTimer(newActivePreset);
-        setTimer(newTimer);
-        saveSessionTimer(newTimer);
-      }
 
       if (editingId === pendingDelete.id) {
         handleCancelEdit();

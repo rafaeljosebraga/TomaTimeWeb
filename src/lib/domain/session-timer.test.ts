@@ -27,10 +27,11 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
 
   const BASE_TIMESTAMP = 1700000000000; // Timestamp fixo de referência em ms
 
-  it("deve inicializar com o preset carregado, estágio 'TF' e timestamps nulos", () => {
+  it("deve inicializar com o preset carregado como snapshot, estágio 'TF' e timestamps nulos", () => {
     const timer = createSessionTimer(preset);
 
-    expect(timer.preset).toBe(preset);
+    expect(timer.preset).toEqual(preset);
+    expect(timer.preset).not.toBe(preset); // Snapshot isolado (não compartilha a mesma referência de memória)
     expect(timer.stage).toBe("TF");
     expect(timer.phase).toBe("idle");
     expect(timer.startedAt).toBeNull();
@@ -178,7 +179,7 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
   });
 
   describe("skipSessionStage (Pular fase manualmente)", () => {
-    it("deve avançar manualmente de TF para TPC e NÃO deve incrementar completedCycles (RN-03)", () => {
+    it("deve avançar manualmente de TF para TPC e NÃO deve incrementar completedCycles", () => {
       const timer = startSessionTimer(createSessionTimer(preset), BASE_TIMESTAMP);
       expect(timer.stage).toBe("TF");
       expect(timer.completedCycles).toBe(0);
@@ -187,14 +188,14 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
 
       expect(skipped.stage).toBe("TPC");
       expect(skipped.phase).toBe("idle");
-      expect(skipped.completedCycles).toBe(0); // RN-03: pular foco NÃO incrementa contagem de ciclos
+      expect(skipped.completedCycles).toBe(0); // pular foco não incrementa contagem de ciclos
       expect(skipped.durationMs).toBe(5 * 60 * 1000);
       expect(skipped.remainingMs).toBe(5 * 60 * 1000);
       expect(skipped.startedAt).toBeNull();
       expect(skipped.endsAt).toBeNull();
     });
 
-    it("ao pular fase de foco inicial com meta 4, deve manter a mensagem 'Faltam 4 ciclos de foco para a próxima Pausa Longa.' (RN-03 + Mensagem)", () => {
+    it("ao pular fase de foco inicial com meta 4, deve manter a mensagem 'Faltam 4 ciclos de foco para a próxima Pausa Longa.'", () => {
       // Inicia timer clássico com meta de 4 ciclos antes da pausa longa
       const initialTimer = createSessionTimer(preset);
       expect(initialTimer.completedCycles).toBe(0);
@@ -215,7 +216,7 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
       );
     });
 
-    it("deve avançar manualmente de TPC para TF e NÃO deve incrementar completedCycles (RN-03)", () => {
+    it("deve avançar manualmente de TPC para TF e NÃO deve incrementar completedCycles", () => {
       const shortBreakTimer = {
         ...createSessionTimer(preset),
         stage: "TPC" as const,
@@ -227,10 +228,10 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
       expect(skipped.stage).toBe("TF");
       expect(skipped.durationMs).toBe(25 * 60 * 1000);
       expect(skipped.remainingMs).toBe(25 * 60 * 1000);
-      expect(skipped.completedCycles).toBe(1); // RN-03: pular pausa NÃO incrementa contagem de ciclos
+      expect(skipped.completedCycles).toBe(1); // pular pausa não incrementa contagem de ciclos
     });
 
-    it("deve avançar manualmente de TPL para TF preservando a contagem de ciclos (RN-03)", () => {
+    it("deve avançar manualmente de TPL para TF preservando a contagem de ciclos", () => {
       const longBreakTimer = {
         ...createSessionTimer(preset),
         stage: "TPL" as const,

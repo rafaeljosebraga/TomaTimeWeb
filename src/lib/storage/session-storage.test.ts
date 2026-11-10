@@ -132,4 +132,50 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     clearSessionTimer();
     expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
   });
+
+  describe("Snapshot isolado do Preset na Sessão Ativa", () => {
+    it("deve manter o snapshot intacto mesmo se o preset original for editado", () => {
+      // Inicia e salva a sessão com o preset original (25 minutos)
+      const session = startSessionTimer(createSessionTimer(mockPreset), BASE_NOW);
+      saveSessionTimer(session);
+
+      // Simula edição do preset no gerenciador de presets (ex: tempo alterado para 50 min)
+      const editedPreset: TimerPreset = {
+        ...mockPreset,
+        name: "Preset Modificado",
+        focusMinutes: 50,
+      };
+
+      // Recarrega a sessão passando o preset editado
+      const restored = loadSessionTimer(editedPreset, BASE_NOW + 1000);
+
+      // O preset da sessão ativa NÃO deve sofrer efeito colateral
+      expect(restored.preset.name).toBe("Preset 25/5");
+      expect(restored.preset.focusMinutes).toBe(25);
+      expect(restored.durationMs).toBe(25 * 60 * 1000);
+    });
+
+    it("deve manter o snapshot intacto mesmo se o preset original for excluído", () => {
+      // Inicia e salva a sessão com o preset que será deletado
+      const session = startSessionTimer(createSessionTimer(mockPreset), BASE_NOW);
+      saveSessionTimer(session);
+
+      // Simula exclusão do preset, onde o fallback ativo passa a ser outro preset
+      const fallbackPreset: TimerPreset = {
+        id: "preset-fallback",
+        name: "Preset Fallback",
+        focusMinutes: 10,
+        shortBreakMinutes: 2,
+        cyclesBeforeLongBreak: 2,
+        longBreakMinutes: 5,
+      };
+
+      const restored = loadSessionTimer(fallbackPreset, BASE_NOW + 1000);
+
+      // A sessão continua com seu snapshot original isolado
+      expect(restored.preset.id).toBe(mockPreset.id);
+      expect(restored.preset.name).toBe("Preset 25/5");
+      expect(restored.durationMs).toBe(25 * 60 * 1000);
+    });
+  });
 });
