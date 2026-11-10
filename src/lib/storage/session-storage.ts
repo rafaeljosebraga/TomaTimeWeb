@@ -79,19 +79,17 @@ export function loadSessionTimer(
       return createSessionTimer(activePreset);
     }
 
-    // Garante que o timer use os dados mais recentes do preset ativo
-    const effectivePreset =
-      parsed.preset.id === activePreset.id ? activePreset : parsed.preset;
-
-    // Recalcula a duração do estágio atual com o preset mais recente
+    // O preset da sessão é um snapshot imutável isolado da sessão ativa.
+    // Ele não se altera mesmo se o preset original for editado ou excluído da lista de presets.
+    const snapshotPreset: TimerPreset = { ...parsed.preset };
     const currentDurationMs = getStageDurationMs(
-      effectivePreset,
+      snapshotPreset,
       parsed.stage,
     );
 
     const baseRestoredTimer: SessionTimer = {
       ...parsed,
-      preset: effectivePreset,
+      preset: snapshotPreset,
       durationMs: currentDurationMs,
     };
 

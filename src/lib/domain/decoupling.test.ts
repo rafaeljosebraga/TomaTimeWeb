@@ -125,4 +125,25 @@ describe("Desacoplamento entre Tarefas e Temporizador de Sessão", () => {
     const tasksRawAfter = localStorage.getItem(TASK_STORAGE_KEYS.TASKS);
     expect(tasksRawAfter).toBe(tasksRawBefore);
   });
+
+  it("edição ou exclusão do preset no gerenciador não afeta o snapshot da sessão ativa", () => {
+    // 1. Cria a sessão a partir de um preset
+    const session = startSessionTimer(createSessionTimer(preset), 1700000000000);
+    saveSessionTimer(session);
+
+    // 2. Simula alteração do preset de origem
+    const modifiedPreset: TimerPreset = {
+      ...preset,
+      name: "Nome Alterado",
+      focusMinutes: 60,
+      cyclesBeforeLongBreak: 1,
+    };
+
+    // 3. Ao carregar a sessão, ela deve permanecer com o snapshot inalterado
+    const restored = loadSessionTimer(modifiedPreset, 1700000001000);
+    expect(restored.preset.name).toBe(preset.name);
+    expect(restored.preset.focusMinutes).toBe(preset.focusMinutes);
+    expect(restored.preset.cyclesBeforeLongBreak).toBe(preset.cyclesBeforeLongBreak);
+    expect(restored.durationMs).toBe(preset.focusMinutes * 60 * 1000);
+  });
 });
