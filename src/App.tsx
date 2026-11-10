@@ -1,9 +1,8 @@
 // src/App.tsx
-// Interface simples em HTML nativo para exercitar as capacidades do Tomatimer.
+
 import { useEffect, useState } from "react";
+import { Timer, AlertCircle, X } from "lucide-react";
 import {
-  TASK_PRIORITIES,
-  TASK_STATES,
   type PresetValidationErrors,
   type SessionTimer,
   type Task,
@@ -15,8 +14,6 @@ import {
 import {
   createSessionTimer,
   endSessionTimer,
-  getLongBreakStatusMessage,
-  getRemainingSeconds,
   pauseSessionTimer,
   resetCompletedCycles,
   resetSessionTimer,
@@ -45,7 +42,12 @@ import {
   loadTasks,
   updateTask,
 } from "@/lib/storage/tasks-storage";
-import { sortTasks } from "@/lib/domain/tasks-ordering";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { TimerPanel } from "@/components/pomodoro/timer-panel";
+import { TaskPanel } from "@/components/pomodoro/task-panel";
+import { TaskDialog } from "@/components/pomodoro/task-dialog";
+import { DeleteDialog } from "@/components/pomodoro/delete-dialog";
 
 type PendingDelete = {
   type: "preset" | "task";
@@ -81,17 +83,17 @@ const INITIAL_TASK_FORM: TaskFormData = {
   priority: "média",
 };
 
-function formatSeconds(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-}
+const STAGE_LABELS: Record<string, string> = {
+  TF: "Tempo de Foco (TF)",
+  TPC: "Tempo de Pausa Curta (TPC)",
+  TPL: "Tempo de Pausa Longa (TPL)",
+};
 
 export function App() {
   // 1. Estado de presets e seleção
   const [presets, setPresets] = useState<TimerPreset[]>(() => loadPresets());
   const [activePresetId, setActiveId] = useState<string>(() =>
-    getActivePresetId(),
+    getActivePresetId()
   );
 
   // 2. Estado do temporizador de sessão (restaura do storage ou cria novo)
@@ -100,7 +102,7 @@ export function App() {
     return loadSessionTimer(active);
   });
 
-  // 3. Estado do formulário de criação/edição
+  // 3. Estado do formulário de criação/edição de preset
   const [formData, setFormData] = useState<PresetFormData>(INITIAL_FORM_DATA);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<PresetValidationErrors>({});
@@ -111,6 +113,9 @@ export function App() {
   const [taskFormData, setTaskFormData] = useState<TaskFormData>(INITIAL_TASK_FORM);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskFormErrors, setTaskFormErrors] = useState<TaskValidationErrors>({});
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState<boolean>(false);
+
+  // 5. Estado de confirmação explícita de exclusão
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
   // Sincroniza o temporizador a cada segundo quando estiver rodando
@@ -129,6 +134,29 @@ export function App() {
       window.clearInterval(intervalId);
     };
   }, [timer.phase]);
+
+  // Atalho de teclado: barra de espaço para alternar Iniciar / Pausar
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.code !== "Space" || e.repeat) return;
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || target?.isContentEditable) {
+        return;
+      }
+      e.preventDefault();
+      if (timer.phase === "running") {
+        handlePause();
+      } else if (timer.phase === "paused") {
+        handleResume();
+      } else {
+        handleStart();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [timer]);
 
   // Controles do timer
   function handleStart() {
@@ -166,7 +194,7 @@ export function App() {
     const updated = skipSessionStage(timer);
     setTimer(updated);
     saveSessionTimer(updated);
-    setGlobalMessage(`Fase pulada com sucesso. Próxima fase: ${stageLabels[updated.stage]}.`);
+    setGlobalMessage(`Fase pulada com sucesso. Próxima fase: ${STAGE_LABELS[updated.stage]}.`);
   }
 
   function handleEndSession() {
@@ -312,6 +340,13 @@ export function App() {
   }
 
   // Handlers para Gerenciamento de Tarefas
+  function handleOpenCreateTaskDialog() {
+    setEditingTaskId(null);
+    setTaskFormData(INITIAL_TASK_FORM);
+    setTaskFormErrors({});
+    setIsTaskDialogOpen(true);
+  }
+
   function handleTaskFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTaskFormErrors({});
@@ -326,6 +361,7 @@ export function App() {
       setTasks(loadTasks());
       setEditingTaskId(null);
       setTaskFormData(INITIAL_TASK_FORM);
+      setIsTaskDialogOpen(false);
       setGlobalMessage("Tarefa atualizada com sucesso.");
     } else {
       const result = createTask(taskFormData);
@@ -336,6 +372,7 @@ export function App() {
 
       setTasks(loadTasks());
       setTaskFormData(INITIAL_TASK_FORM);
+      setIsTaskDialogOpen(false);
       setGlobalMessage("Tarefa criada com sucesso.");
     }
   }
@@ -348,14 +385,15 @@ export function App() {
       priority: task.priority,
     });
     setTaskFormErrors({});
+    setIsTaskDialogOpen(true);
   }
 
   function handleCancelEditTask() {
     setEditingTaskId(null);
     setTaskFormData(INITIAL_TASK_FORM);
     setTaskFormErrors({});
+    setIsTaskDialogOpen(false);
   }
-
 
   function handleQuickChangeTaskState(id: string, newState: TaskState) {
     const result = updateTask(id, { state: newState });
@@ -373,648 +411,122 @@ export function App() {
     }
   }
 
-  const remainingSecs = getRemainingSeconds(timer);
-  const remainingFormatted = formatSeconds(remainingSecs);
-
-  const stageLabels: Record<string, string> = {
-    TF: "Tempo de Foco (TF)",
-    TPC: "Tempo de Pausa Curta (TPC)",
-    TPL: "Tempo de Pausa Longa (TPL)",
-  };
-
-  const phaseLabels: Record<string, string> = {
-    idle: "Parado (Pronto)",
-    running: "Em andamento",
-    paused: "Pausado",
-    completed: "Estágio Concluído!",
-  };
-
-
   return (
-    <main style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
-      <header>
-        <h1>Tomatimer</h1>
-        <p>
-          Temporizador Pomodoro com suporte a Presets personalizados, baseado em
-          timestamps e persistido exclusivamente em <code>localStorage</code>.
-        </p>
-      </header>
-
-      {/* AVISO: AMBIENTE DE TESTES / INTERFACE PROVISÓRIA */}
-      <aside
-        role="note"
-        style={{
-          background: "#fff3cd",
-          border: "2px solid #ffeeba",
-          color: "#856404",
-          padding: "16px",
-          marginBottom: "20px",
-          borderRadius: "4px",
-          fontSize: "15px",
-          lineHeight: "1.5",
-        }}
-      >
-        <strong>⚠️ AVISO IMPORTANTE:</strong> Esta página HTML é estritamente um
-        ambiente provisório de rascunho para testes manuais e depuração das
-        funcionalidades do temporizador, presets e tarefas. Esta tela <strong>deve ser completamente refeita</strong> na
-        etapa de interface definitiva.
-      </aside>
-
-      {globalMessage && (
-        <aside
-          role="status"
-          style={{
-            background: "#f0f0f0",
-            padding: "10px",
-            marginBottom: "16px",
-            borderLeft: "4px solid #333",
-          }}
-        >
-          {globalMessage}
-        </aside>
-      )}
-
-      <hr />
-
-      {/* SEÇÃO 1: TEMPORIZADOR DA SESSÃO */}
-      <section aria-labelledby="timer-heading">
-        <h2 id="timer-heading">Temporizador da Sessão</h2>
-
-        <div>
-          <p>
-            <strong>Preset Carregado:</strong> {timer.preset.name} (TF:{" "}
-            {timer.preset.focusMinutes}m | TPC: {timer.preset.shortBreakMinutes}m
-            | TPL: {timer.preset.longBreakMinutes}m | Meta:{" "}
-            {timer.preset.cyclesBeforeLongBreak} ciclos)
-          </p>
-          <p>
-            <strong>Estágio Atual:</strong> {stageLabels[timer.stage]}
-          </p>
-          <p>
-            <strong>Status:</strong> {phaseLabels[timer.phase]}
-          </p>
-          <p>
-            <strong>Ciclos de Foco Concluídos:</strong> {timer.completedCycles}
-            <button
-              type="button"
-              onClick={handleResetCycles}
-              style={{ marginLeft: "12px", fontSize: "12px" }}
-              title="Zerar a contagem de ciclos concluídos"
-            >
-              Zerar Ciclos
-            </button>
-          </p>
-          <p>
-            <strong>Para a próxima Pausa Longa:</strong>{" "}
-            {getLongBreakStatusMessage(timer)}
-          </p>
-        </div>
-
-        {/* Display grande */}
-        <div style={{ margin: "20px 0" }}>
-          <output
-            aria-live="polite"
-            style={{
-              fontSize: "64px",
-              fontWeight: "bold",
-              fontFamily: "monospace",
-              display: "block",
-            }}
-          >
-            {remainingFormatted}
-          </output>
-          <small>
-            Controle por timestamp (Fim previsto:{" "}
-            {timer.endsAt ? new Date(timer.endsAt).toLocaleTimeString() : "Nenhum"})
-          </small>
-        </div>
-
-        {/* Botões nativos de controle */}
-        <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-          {timer.phase === "idle" && (
-            <button type="button" onClick={handleStart}>
-              Iniciar
-            </button>
-          )}
-
-          {timer.phase === "running" && (
-            <button type="button" onClick={handlePause}>
-              Pausar
-            </button>
-          )}
-
-          {timer.phase === "paused" && (
-            <>
-              <button type="button" onClick={handleResume}>
-                Retomar
-              </button>
-              <button type="button" onClick={handleReset}>
-                Reiniciar
-              </button>
-            </>
-          )}
-
-          {timer.phase === "completed" && (
-            <>
-              <button type="button" onClick={handleStart}>
-                Iniciar Próximo Estágio
-              </button>
-              <button type="button" onClick={handleReset}>
-                Reiniciar
-              </button>
-            </>
-          )}
-
-          <button
-            type="button"
-            onClick={handleSkipStage}
-            title="Avançar manualmente para a próxima fase prevista"
-          >
-            Pular Fase ⏭
-          </button>
-
-          <button
-            type="button"
-            onClick={handleEndSession}
-            title="Finalizar a sessão ativa a qualquer momento"
-          >
-            Encerrar Sessão ⏹
-          </button>
-        </div>
-      </section>
-
-      <hr />
-
-      {/* SEÇÃO 2: SELETOR E LISTA DE PRESETS */}
-      <section aria-labelledby="presets-heading">
-        <h2 id="presets-heading">Presets Salvos no Navegador</h2>
-
-        <table border={1} cellPadding={8} style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Nome</th>
-              <th>Foco (TF)</th>
-              <th>Pausa Curta (TPC)</th>
-              <th>Ciclos Meta</th>
-              <th>Pausa Longa (TPL)</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {presets.map((preset) => {
-              const isActive = preset.id === activePresetId;
-              return (
-                <tr key={preset.id} style={{ background: isActive ? "#eef" : "transparent" }}>
-                  <td style={{ textAlign: "center" }}>
-                    {isActive ? <strong>ATIVO</strong> : "—"}
-                  </td>
-                  <td>{preset.name}</td>
-                  <td>{preset.focusMinutes} min</td>
-                  <td>{preset.shortBreakMinutes} min</td>
-                  <td>{preset.cyclesBeforeLongBreak}</td>
-                  <td>{preset.longBreakMinutes} min</td>
-                  <td>
-                    {!isActive && (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectActivePreset(preset.id)}
-                        style={{ marginRight: "6px" }}
-                      >
-                        Ativar
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleStartEdit(preset)}
-                      style={{ marginRight: "6px" }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRequestDeletePreset(preset)}
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
-
-      <hr />
-
-      {/* SEÇÃO 3: FORMULÁRIO DE CRIAÇÃO / EDIÇÃO */}
-      <section aria-labelledby="form-heading">
-        <h2 id="form-heading">
-          {editingId ? "Editar Preset" : "Criar Novo Preset"}
-        </h2>
-
-        <form onSubmit={handleSavePreset} style={{ maxWidth: "450px" }}>
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="name-input" style={{ display: "block" }}>
-              Nome do preset (1 a 40 caracteres):
-            </label>
-            <input
-              id="name-input"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={{ width: "100%", padding: "6px" }}
-            />
-            {formErrors.name && (
-              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                {formErrors.name.join(" ")}
-              </p>
-            )}
-          </div>
-
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="focus-input" style={{ display: "block" }}>
-              Tempo de foco (TF: 1 a 120 min):
-            </label>
-            <input
-              id="focus-input"
-              type="number"
-              min={1}
-              max={120}
-              value={formData.focusMinutes}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  focusMinutes: Number(e.target.value),
-                })
-              }
-              style={{ width: "100%", padding: "6px" }}
-            />
-            {formErrors.focusMinutes && (
-              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                {formErrors.focusMinutes.join(" ")}
-              </p>
-            )}
-          </div>
-
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="short-break-input" style={{ display: "block" }}>
-              Tempo de pausa curta (TPC: 1 a 60 min):
-            </label>
-            <input
-              id="short-break-input"
-              type="number"
-              min={1}
-              max={60}
-              value={formData.shortBreakMinutes}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  shortBreakMinutes: Number(e.target.value),
-                })
-              }
-              style={{ width: "100%", padding: "6px" }}
-            />
-            {formErrors.shortBreakMinutes && (
-              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                {formErrors.shortBreakMinutes.join(" ")}
-              </p>
-            )}
-          </div>
-
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="cycles-input" style={{ display: "block" }}>
-              Quantidade de ciclos antes da pausa longa (1 a 12):
-            </label>
-            <input
-              id="cycles-input"
-              type="number"
-              min={1}
-              max={12}
-              value={formData.cyclesBeforeLongBreak}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  cyclesBeforeLongBreak: Number(e.target.value),
-                })
-              }
-              style={{ width: "100%", padding: "6px" }}
-            />
-            {formErrors.cyclesBeforeLongBreak && (
-              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                {formErrors.cyclesBeforeLongBreak.join(" ")}
-              </p>
-            )}
-          </div>
-
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="long-break-input" style={{ display: "block" }}>
-              Tempo de pausa longa (TPL: 1 a 60 min):
-            </label>
-            <input
-              id="long-break-input"
-              type="number"
-              min={1}
-              max={60}
-              value={formData.longBreakMinutes}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  longBreakMinutes: Number(e.target.value),
-                })
-              }
-              style={{ width: "100%", padding: "6px" }}
-            />
-            {formErrors.longBreakMinutes && (
-              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                {formErrors.longBreakMinutes.join(" ")}
-              </p>
-            )}
-          </div>
-
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button type="submit">
-              {editingId ? "Salvar Alterações" : "Cadastrar Preset"}
-            </button>
-            {editingId && (
-              <button type="button" onClick={handleCancelEdit}>
-                Cancelar Edição
-              </button>
-            )}
-          </div>
-        </form>
-      </section>
-
-      <hr />
-
-      {/* SEÇÃO 4: GERENCIAMENTO DE TAREFAS (TASKS) */}
-      <section aria-labelledby="tasks-heading">
-        <h2 id="tasks-heading">Tarefas (Tasks)</h2>
-        <p>
-          Gerenciamento e persistência de tarefas no <code>localStorage</code> com
-          regras de negócio e valores estritamente em português.
-        </p>
-
-        {/* Formulário de Tarefa */}
-        <form
-          onSubmit={handleTaskFormSubmit}
-          style={{
-            background: "#f9f9f9",
-            border: "1px solid #ccc",
-            padding: "16px",
-            marginBottom: "20px",
-          }}
-        >
-          <h3>{editingTaskId ? "Editar Tarefa" : "Cadastrar Nova Tarefa"}</h3>
-
-          <div style={{ marginBottom: "12px" }}>
-            <label htmlFor="task-title-input" style={{ display: "block", fontWeight: "bold" }}>
-              Título da tarefa (1 a 100 caracteres):
-            </label>
-            <input
-              id="task-title-input"
-              type="text"
-              value={taskFormData.title}
-              onChange={(e) =>
-                setTaskFormData({ ...taskFormData, title: e.target.value })
-              }
-              placeholder="Ex: Estudar regras do módulo de tarefas"
-              maxLength={100}
-              style={{ width: "100%", padding: "6px", boxSizing: "border-box" }}
-            />
-            {taskFormErrors.title && (
-              <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                {taskFormErrors.title.join(" ")}
-              </p>
-            )}
-          </div>
-
-          <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
-            <div style={{ flex: 1 }}>
-              <label htmlFor="task-state-select" style={{ display: "block", fontWeight: "bold" }}>
-                Estado da tarefa:
-              </label>
-              <select
-                id="task-state-select"
-                value={taskFormData.state}
-                onChange={(e) =>
-                  setTaskFormData({
-                    ...taskFormData,
-                    state: e.target.value as TaskState,
-                  })
-                }
-                style={{ width: "100%", padding: "6px" }}
-              >
-                {TASK_STATES.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-              {taskFormErrors.state && (
-                <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                  {taskFormErrors.state.join(" ")}
+    <ThemeProvider defaultTheme="system">
+      <div className="flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200">
+        {/* Cabeçalho da Aplicação */}
+        <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+                <Timer className="size-4.5" aria-hidden />
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold tracking-tight">Tomatimer</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">
+                  Temporizador Pomodoro para estudos
                 </p>
-              )}
+              </div>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <label htmlFor="task-priority-select" style={{ display: "block", fontWeight: "bold" }}>
-                Prioridade da tarefa:
-              </label>
-              <select
-                id="task-priority-select"
-                value={taskFormData.priority}
-                onChange={(e) =>
-                  setTaskFormData({
-                    ...taskFormData,
-                    priority: e.target.value as TaskPriority,
-                  })
-                }
-                style={{ width: "100%", padding: "6px" }}
-              >
-                {TASK_PRIORITIES.map((priority) => (
-                  <option key={priority} value={priority}>
-                    {priority}
-                  </option>
-                ))}
-              </select>
-              {taskFormErrors.priority && (
-                <p role="alert" style={{ color: "red", margin: "4px 0" }}>
-                  {taskFormErrors.priority.join(" ")}
-                </p>
-              )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
             </div>
           </div>
+        </header>
 
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button type="submit">
-              {editingTaskId ? "Salvar Alterações da Tarefa" : "Criar Tarefa"}
-            </button>
-            {editingTaskId && (
-              <button type="button" onClick={handleCancelEditTask}>
-                Cancelar Edição
-              </button>
-            )}
-          </div>
-        </form>
-
-        {/* Listagem de Tarefas */}
-        {tasks.length === 0 ? (
-          <p>
-            <em>Nenhuma tarefa cadastrada no navegador até o momento.</em>
-          </p>
-        ) : (
-          <table
-            border={1}
-            cellPadding={8}
-            style={{ width: "100%", borderCollapse: "collapse" }}
-          >
-            <thead>
-              <tr style={{ background: "#eee" }}>
-                <th>Título</th>
-                <th>Estado</th>
-                <th>Prioridade</th>
-                <th>Criada em</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortTasks(tasks).map((task) => (
-                <tr key={task.id}>
-                  <td>
-                    <strong>{task.title}</strong>
-                  </td>
-                  <td>
-                    <select
-                      value={task.state}
-                      onChange={(e) =>
-                        handleQuickChangeTaskState(
-                          task.id,
-                          e.target.value as TaskState,
-                        )
-                      }
-                      title="Alterar estado da tarefa rapidamente"
-                    >
-                      {TASK_STATES.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      value={task.priority}
-                      onChange={(e) =>
-                        handleQuickChangeTaskPriority(
-                          task.id,
-                          e.target.value as TaskPriority,
-                        )
-                      }
-                      title="Alterar prioridade da tarefa rapidamente"
-                    >
-                      {TASK_PRIORITIES.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {priority}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <small>
-                      {new Date(task.createdAt).toLocaleString()}
-                    </small>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => handleEditTask(task)}
-                      style={{ marginRight: "6px" }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRequestDeleteTask(task)}
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      {/* DIÁLOGO DE CONFIRMAÇÃO EXPLÍCITA DE EXCLUSÃO */}
-      {pendingDelete && (
-        <aside
-          role="alertdialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: "24px",
-              borderRadius: "6px",
-              maxWidth: "480px",
-              width: "90%",
-              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
-            }}
-          >
-            <h3 style={{ marginTop: 0, color: "#d9534f" }}>
-              Confirmar Exclusão
-            </h3>
-            <p>
-              Tem certeza de que deseja excluir permanentemente o{" "}
-              {pendingDelete.type === "preset" ? "preset" : "tarefa"}{" "}
-              <strong>"{pendingDelete.name}"</strong>? Esta ação não pode ser
-              desfeita.
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                justifyContent: "flex-end",
-                marginTop: "16px",
-              }}
+        {/* Mensagem global de status / notificação acessível */}
+        {globalMessage && (
+          <div className="border-b border-border bg-muted/40">
+            <aside
+              role="status"
+              className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 text-xs text-foreground sm:px-6"
             >
-              <button type="button" onClick={handleCancelDelete}>
-                Cancelar
-              </button>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="size-3.5 text-primary shrink-0" aria-hidden />
+                <span>{globalMessage}</span>
+              </div>
               <button
                 type="button"
-                onClick={handleConfirmDelete}
-                style={{
-                  background: "#d9534f",
-                  color: "#fff",
-                  border: "none",
-                  padding: "8px 16px",
-                  cursor: "pointer",
-                  borderRadius: "4px",
-                }}
+                onClick={() => setGlobalMessage(null)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5 rounded-sm"
+                aria-label="Dispensar aviso"
               >
-                Confirmar Exclusão
+                <X className="size-3.5" />
               </button>
-            </div>
+            </aside>
           </div>
-        </aside>
-      )}
-    </main>
+        )}
+
+        {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
+          <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+            {/* Coluna 1: Painel do Temporizador */}
+            <TimerPanel
+              timer={timer}
+              presets={presets}
+              activePresetId={activePresetId}
+              formData={formData}
+              editingId={editingId}
+              formErrors={formErrors}
+              onStart={handleStart}
+              onPause={handlePause}
+              onResume={handleResume}
+              onReset={handleReset}
+              onResetCycles={handleResetCycles}
+              onSkipStage={handleSkipStage}
+              onEndSession={handleEndSession}
+              onSelectActivePreset={handleSelectActivePreset}
+              onFormDataChange={setFormData}
+              onSavePreset={handleSavePreset}
+              onStartEdit={handleStartEdit}
+              onCancelEdit={handleCancelEdit}
+              onRequestDeletePreset={handleRequestDeletePreset}
+            />
+
+            {/* Coluna 2: Painel de Tarefas */}
+            <TaskPanel
+              tasks={tasks}
+              onOpenCreateDialog={handleOpenCreateTaskDialog}
+              onEditTask={handleEditTask}
+              onRequestDeleteTask={handleRequestDeleteTask}
+              onQuickChangeState={handleQuickChangeTaskState}
+              onQuickChangePriority={handleQuickChangeTaskPriority}
+            />
+          </div>
+        </main>
+
+        {/* Rodapé da Aplicação */}
+        <footer className="mt-auto border-t border-border bg-background">
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6">
+            <p>
+              Técnica Pomodoro: blocos de foco intercalados com pausas curtas e uma pausa longa a cada ciclo.
+            </p>
+            <p>Seus dados ficam salvos exclusivamente neste navegador via localStorage.</p>
+          </div>
+        </footer>
+
+        {/* Modal de Formulário de Tarefas */}
+        <TaskDialog
+          open={isTaskDialogOpen}
+          editingTaskId={editingTaskId}
+          formData={taskFormData}
+          formErrors={taskFormErrors}
+          onOpenChange={setIsTaskDialogOpen}
+          onFormDataChange={setTaskFormData}
+          onSubmit={handleTaskFormSubmit}
+          onCancel={handleCancelEditTask}
+        />
+
+        {/* Diálogo de Confirmação de Exclusão (Preset / Tarefa) */}
+        <DeleteDialog
+          pendingDelete={pendingDelete}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      </div>
+    </ThemeProvider>
   );
 }
 
