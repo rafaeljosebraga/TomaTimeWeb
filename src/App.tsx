@@ -35,6 +35,7 @@ import {
   updatePreset,
 } from "@/lib/storage/presets-storage";
 import {
+  clearSessionTimer,
   loadSessionTimer,
   saveSessionTimer,
 } from "@/lib/storage/session-storage";
@@ -169,9 +170,16 @@ export function App() {
   }
 
   function handleEndSession() {
-    const updated = endSessionTimer(timer);
+    clearSessionTimer();
+
+    // Sincroniza a nova sessão limpa com o espelho mais atualizado do preset no storage
+    const currentStoredPreset =
+      getPresetById(timer.preset.id) ??
+      getPresetById(activePresetId) ??
+      loadPresets()[0]!;
+
+    const updated = endSessionTimer(timer, currentStoredPreset);
     setTimer(updated);
-    saveSessionTimer(updated);
     setGlobalMessage("Sessão ativa encerrada.");
   }
 

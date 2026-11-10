@@ -330,5 +330,25 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
 
       expect(ended).toEqual(idleTimer);
     });
+
+    it("deve sincronizar com o preset atualizado (espelho do storage) ao encerrar a sessão", () => {
+      const runningTimer = startSessionTimer(createSessionTimer(preset), BASE_TIMESTAMP);
+
+      const updatedMirrorPreset: TimerPreset = {
+        ...preset,
+        name: "Preset Atualizado 40/10",
+        focusMinutes: 40,
+        shortBreakMinutes: 10,
+      };
+
+      const ended = endSessionTimer(runningTimer, updatedMirrorPreset);
+
+      expect(ended.phase).toBe("idle");
+      expect(ended.stage).toBe("TF");
+      expect(ended.preset.name).toBe("Preset Atualizado 40/10");
+      expect(ended.preset.focusMinutes).toBe(40);
+      expect(ended.durationMs).toBe(40 * 60 * 1000);
+      expect(ended.remainingMs).toBe(40 * 60 * 1000);
+    });
   });
 });
