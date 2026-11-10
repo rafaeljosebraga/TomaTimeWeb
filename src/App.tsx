@@ -99,7 +99,7 @@ export function App() {
     getActivePresetId()
   );
 
-  // 2. Estado do temporizador de sessão (restaura do storage ou cria novo)
+  // 2. Estado do temporizador de sessão
   const [isResumedSession, setIsResumedSession] = useState<boolean>(() =>
     hasStoredActiveSession()
   );
