@@ -5,10 +5,11 @@ import type { SessionTimer, TimerPreset } from "@/types/domain";
 import {
   createSessionTimer,
   getStageDurationMs,
-  tickSessionTimer,
+  recalculateSessionOnResume,
 } from "@/lib/domain/session-timer";
 
-export const SESSION_STORAGE_KEY = "tomatimer:session" as const;
+export const SESSION_STORAGE_KEY = "pomodoro.sessaoAtiva" as const;
+export const LEGACY_SESSION_STORAGE_KEY = "tomatimer:session" as const;
 
 function isBrowserStorageAvailable(): boolean {
   return typeof window !== "undefined" && !!window.localStorage;
@@ -28,11 +29,40 @@ export function clearSessionTimer(): void {
   try {
     if (isBrowserStorageAvailable()) {
       localStorage.removeItem(SESSION_STORAGE_KEY);
+      localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY);
     }
   } catch {
     // Falha silenciosa
   }
 }
+
+/**
+ * Retorna o ID do preset atualmente em uso por uma sessão ativa
+ * Regra RN-01 (bloqueio de edição/exclusão)
+ */
+export function getActiveSessionPresetId(): string | null {
+  try {
+    if (!isBrowserStorageAvailable()) return null;
+    const raw =
+      localStorage.getItem(SESSION_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_SESSION_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!isValidStoredSession(parsed)) return null;
+
+    // Sessão ativa: em andamento ou pausada (RN-01)
+    if (parsed.phase === "running" || parsed.phase === "paused") {
+      return parsed.preset.id;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+
 
 function isValidStoredSession(value: unknown): value is SessionTimer {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -68,7 +98,9 @@ export function loadSessionTimer(
       return createSessionTimer(activePreset);
     }
 
-    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    const raw =
+      localStorage.getItem(SESSION_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_SESSION_STORAGE_KEY);
     if (!raw) {
       return createSessionTimer(activePreset);
     }
@@ -79,40 +111,25 @@ export function loadSessionTimer(
       return createSessionTimer(activePreset);
     }
 
-    // Garante que o timer use os dados mais recentes do preset ativo
-    const effectivePreset =
-      parsed.preset.id === activePreset.id ? activePreset : parsed.preset;
+    // RN-05: Preserva o snapshot do preset armazenado na sessão (imutável a alterações posteriores no preset)
+    const snapshotPreset = parsed.preset;
 
-    // Recalcula a duração do estágio atual com o preset mais recente
+    // Recalcula a duração do estágio atual com o snapshot do preset
     const currentDurationMs = getStageDurationMs(
-      effectivePreset,
+      snapshotPreset,
       parsed.stage,
     );
 
     const baseRestoredTimer: SessionTimer = {
       ...parsed,
-      preset: effectivePreset,
+      preset: snapshotPreset,
       durationMs: currentDurationMs,
     };
 
-    // Caso 1: O timer estava pausado, idle ou já concluído
-    if (baseRestoredTimer.phase !== "running" || baseRestoredTimer.endsAt === null) {
-      return baseRestoredTimer;
-    }
-
-    // Caso 2: O timer estava rodando e o tempo ainda NÃO expirou
-    if (now < baseRestoredTimer.endsAt) {
-      return {
-        ...baseRestoredTimer,
-        remainingMs: baseRestoredTimer.endsAt - now,
-      };
-    }
-
-    // Caso 3: O tempo expirou enquanto a página esteve fechada ou recarregando
-    // Avança o temporizador computando a transição de ciclo automaticamente
-    const transitionedTimer = tickSessionTimer(baseRestoredTimer, now);
-    saveSessionTimer(transitionedTimer);
-    return transitionedTimer;
+    // UC10: Recalcula a sessão com base em timestamps e avanço sequencial (RN-06, RN-07, RN-08)
+    const recalculatedTimer = recalculateSessionOnResume(baseRestoredTimer, now);
+    saveSessionTimer(recalculatedTimer);
+    return recalculatedTimer;
   } catch {
     clearSessionTimer();
     return createSessionTimer(activePreset);

@@ -6,10 +6,13 @@ import type {
   ValidationResult,
 } from "@/types/domain";
 import { validatePreset } from "@/lib/domain/validate-preset";
+import { getActiveSessionPresetId } from "./session-storage";
 
 export const PRESET_STORAGE_KEYS = {
-  PRESETS: "tomatimer:presets",
-  ACTIVE_PRESET_ID: "tomatimer:active-preset-id",
+  PRESETS: "pomodoro.presets",
+  LEGACY_PRESETS: "tomatimer:presets",
+  ACTIVE_PRESET_ID: "pomodoro.activePresetId",
+  LEGACY_ACTIVE_PRESET_ID: "tomatimer:active-preset-id",
 } as const;
 
 export const DEFAULT_PRESET_ID = "preset-default-classic";
@@ -37,6 +40,10 @@ function isBrowserStorageAvailable(): boolean {
   return typeof window !== "undefined" && !!window.localStorage;
 }
 
+export function isPresetInUse(id: string): boolean {
+  return getActiveSessionPresetId() === id;
+}
+
 export function savePresets(presets: TimerPreset[]): void {
   try {
     if (isBrowserStorageAvailable()) {
@@ -56,7 +63,9 @@ export function loadPresets(): TimerPreset[] {
       return [...DEFAULT_PRESETS];
     }
 
-    const raw = localStorage.getItem(PRESET_STORAGE_KEYS.PRESETS);
+    const raw =
+      localStorage.getItem(PRESET_STORAGE_KEYS.PRESETS) ??
+      localStorage.getItem(PRESET_STORAGE_KEYS.LEGACY_PRESETS);
     if (!raw) {
       // Inicializa com os presets padrão caso não haja nada salvo
       const defaults = [...DEFAULT_PRESETS];
@@ -106,7 +115,9 @@ export function getActivePresetId(): string {
       return fallbackId;
     }
 
-    const activeId = localStorage.getItem(PRESET_STORAGE_KEYS.ACTIVE_PRESET_ID);
+    const activeId =
+      localStorage.getItem(PRESET_STORAGE_KEYS.ACTIVE_PRESET_ID) ??
+      localStorage.getItem(PRESET_STORAGE_KEYS.LEGACY_ACTIVE_PRESET_ID);
     if (activeId && presets.some((p) => p.id === activeId)) {
       return activeId;
     }
@@ -156,6 +167,18 @@ export function updatePreset(
   id: string,
   input: Partial<Omit<TimerPreset, "id">>,
 ): ValidationResult<TimerPreset> {
+  // RN-01: Um preset em uso por sessão ativa não pode ser editado nem excluído
+  if (isPresetInUse(id)) {
+    return {
+      isValid: false,
+      errors: {
+        name: [
+          "Este preset está em uso por uma sessão ativa e não pode ser editado (RN-01).",
+        ],
+      },
+    };
+  }
+
   const presets = loadPresets();
   const existing = presets.find((p) => p.id === id);
 
@@ -188,6 +211,15 @@ export function updatePreset(
 }
 
 export function deletePreset(id: string): StorageActionResult<{ deletedId: string }> {
+  // RN-01: Um preset em uso por sessão ativa não pode ser editado nem excluído
+  if (isPresetInUse(id)) {
+    return {
+      success: false,
+      error:
+        "Este preset está em uso por uma sessão ativa e não pode ser excluído (RN-01).",
+    };
+  }
+
   const presets = loadPresets();
 
   if (presets.length <= 1) {

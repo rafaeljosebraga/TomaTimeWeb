@@ -64,25 +64,25 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     expect(restored.remainingMs).toBe(20 * 60 * 1000);
   });
 
-  it("deve transicionar para completed caso o timer tenha expirado enquanto a página esteve fechada (now >= endsAt)", () => {
+  it("deve avançar sequencialmente para a fase vigente caso o tempo tenha expirado enquanto a página esteve fechada (RN-07)", () => {
     const initialTimer = createSessionTimer(mockPreset);
     const runningTimer = startSessionTimer(initialTimer, BASE_NOW);
     saveSessionTimer(runningTimer);
 
-    // Simula reabrir a página 30 minutos depois (o foco de 25 min já acabou)
-    const thirtyMinutesLater = BASE_NOW + 30 * 60 * 1000;
-    const restored = loadSessionTimer(mockPreset, thirtyMinutesLater);
+    // Simula reabrir a página 28 minutos depois (o foco de 25 min já acabou; a pausa curta de 5 min vai de 25m a 30m)
+    // Portanto, aos 28 min, o temporizador deve estar rodando na Pausa Curta (TPC) com 2 minutos restantes (120.000 ms)
+    const twentyEightMinutesLater = BASE_NOW + 28 * 60 * 1000;
+    const restored = loadSessionTimer(mockPreset, twentyEightMinutesLater);
 
-    // Deve detectar a conclusão do ciclo de foco e transicionar para a pausa curta (TPC)
-    expect(restored.phase).toBe("completed");
+    expect(restored.phase).toBe("running");
     expect(restored.stage).toBe("TPC");
     expect(restored.completedCycles).toBe(1);
-    expect(restored.remainingMs).toBe(5 * 60 * 1000); // tempo configurado para pausa curta
-    expect(restored.endsAt).toBeNull();
+    expect(restored.remainingMs).toBe(2 * 60 * 1000); // 2 minutos restantes na TPC
+    expect(restored.endsAt).toBe(BASE_NOW + 30 * 60 * 1000);
   });
 
-  it("deve transicionar para TPL caso o ciclo expirado enquanto fechado atinja a meta de ciclos", () => {
-    // Timer no 4º ciclo de foco prestes a terminar
+  it("deve avançar para TPL em andamento caso o ciclo expirado atinja a meta de ciclos (RN-07)", () => {
+    // Timer no 4º ciclo de foco prestes a terminar aos 25 minutos
     const almostDoneTimer: SessionTimer = {
       preset: mockPreset,
       stage: "TF",
@@ -95,15 +95,41 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     };
     saveSessionTimer(almostDoneTimer);
 
-    // Reabre após o término
+    // Reabre 26 minutos depois (1 minuto dentro da Pausa Longa de 15 min, que vai de 25m a 40m)
     const afterEnd = BASE_NOW + 26 * 60 * 1000;
     const restored = loadSessionTimer(mockPreset, afterEnd);
 
-    // Como é o 4º ciclo de foco (4 % 4 === 0), deve transicionar para pausa longa (TPL)
+    // Como atingiu a meta de ciclos (4 % 4 === 0), deve estar na pausa longa (TPL) com 14 min restantes
+    expect(restored.phase).toBe("running");
+    expect(restored.stage).toBe("TPL");
+    expect(restored.completedCycles).toBe(4);
+    expect(restored.remainingMs).toBe(14 * 60 * 1000); // 14 minutos restantes
+    expect(restored.endsAt).toBe(BASE_NOW + 40 * 60 * 1000);
+  });
+
+  it("deve encerrar a sessão com status concluído caso todas as fases previstas tenham vencido (RN-08)", () => {
+    // Timer no 4º ciclo de foco
+    const almostDoneTimer: SessionTimer = {
+      preset: mockPreset,
+      stage: "TF",
+      phase: "running",
+      completedCycles: 3,
+      startedAt: BASE_NOW,
+      endsAt: BASE_NOW + 25 * 60 * 1000,
+      durationMs: 25 * 60 * 1000,
+      remainingMs: 25 * 60 * 1000,
+    };
+    saveSessionTimer(almostDoneTimer);
+
+    // Reabre 50 minutos depois (a pausa longa acabou aos 40 minutos)
+    const longAfterEnd = BASE_NOW + 50 * 60 * 1000;
+    const restored = loadSessionTimer(mockPreset, longAfterEnd);
+
+    // Conforme RN-08: todas as fases previstas venceram -> status concluído
     expect(restored.phase).toBe("completed");
     expect(restored.stage).toBe("TPL");
     expect(restored.completedCycles).toBe(4);
-    expect(restored.remainingMs).toBe(15 * 60 * 1000); // 15 minutos de pausa longa
+    expect(restored.remainingMs).toBe(0);
   });
 
   it("deve restaurar o timer pausado preservando os milissegundos restantes", () => {
