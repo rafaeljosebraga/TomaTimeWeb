@@ -23,6 +23,9 @@ type PresetFormData = {
 };
 
 interface PresetsDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
   presets: TimerPreset[];
   activePresetId: string;
   formData: PresetFormData;
@@ -37,6 +40,9 @@ interface PresetsDialogProps {
 }
 
 export function PresetsDialog({
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  showTrigger = true,
   presets,
   activePresetId,
   formData,
@@ -49,21 +55,25 @@ export function PresetsDialog({
   onCancelEdit,
   onRequestDeletePreset,
 }: PresetsDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = setControlledOpen ?? setInternalOpen;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-9"
-          aria-label="Gerenciar presets de estudo"
-          title="Gerenciar presets"
-        >
-          <Sliders className="size-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-9"
+            aria-label="Gerenciar presets de estudo"
+            title="Gerenciar presets"
+          >
+            <Sliders className="size-4" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gerenciador de Presets</DialogTitle>

@@ -31,7 +31,6 @@ import {
   getRemainingSeconds,
 } from "@/lib/domain/session-timer";
 import { CircularTimer } from "./circular-timer";
-import { PresetsDialog } from "./presets-dialog";
 
 type PresetFormData = {
   name: string;
@@ -306,20 +305,6 @@ export function TimerPanel({
                 ))}
               </SelectContent>
             </Select>
-
-            <PresetsDialog
-              presets={presets}
-              activePresetId={activePresetId}
-              formData={formData}
-              editingId={editingId}
-              formErrors={formErrors}
-              onFormDataChange={onFormDataChange}
-              onSavePreset={onSavePreset}
-              onSelectActivePreset={onSelectActivePreset}
-              onStartEdit={onStartEdit}
-              onCancelEdit={onCancelEdit}
-              onRequestDeletePreset={onRequestDeletePreset}
-            />
           </div>
         </div>
 

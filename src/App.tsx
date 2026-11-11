@@ -51,6 +51,7 @@ import { TaskPanel } from "@/components/pomodoro/task-panel";
 import { TaskDialog } from "@/components/pomodoro/task-dialog";
 import { DeleteDialog } from "@/components/pomodoro/delete-dialog";
 import { ConfirmDialog, type ConfirmAction } from "@/components/pomodoro/confirm-dialog";
+import { QuickActionSidebar } from "@/components/pomodoro/quick-action-sidebar";
 
 type PendingDelete = {
   type: "preset" | "task";
@@ -478,7 +479,10 @@ export function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              <ThemeToggle />
+              {/* No mobile o ThemeToggle fica antes do menu ... */}
+              <div className="hidden sm:block">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </header>
@@ -544,6 +548,22 @@ export function App() {
         {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
+
+          {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
+          <QuickActionSidebar
+            presets={presets}
+            activePresetId={activePresetId}
+            formData={formData}
+            editingId={editingId}
+            formErrors={formErrors}
+            onFormDataChange={setFormData}
+            onSavePreset={handleSavePreset}
+            onSelectActivePreset={handleSelectActivePreset}
+            onStartEdit={handleStartEdit}
+            onCancelEdit={handleCancelEdit}
+            onRequestDeletePreset={handleRequestDeletePreset}
+          />
+
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
             {/* Coluna 1: Painel do Temporizador */}
             <TimerPanel
