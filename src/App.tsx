@@ -522,28 +522,6 @@ export function App() {
           </div>
         )}
 
-        {/* Mensagem global de status / notificação acessível */}
-        {globalMessage && (
-          <div className="border-b border-border bg-muted/40">
-            <aside
-              role="status"
-              className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 text-xs text-foreground sm:px-6"
-            >
-              <div className="flex items-center gap-2">
-                <AlertCircle className="size-3.5 text-primary shrink-0" aria-hidden />
-                <span>{globalMessage}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setGlobalMessage(null)}
-                className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5 rounded-sm"
-                aria-label="Dispensar aviso"
-              >
-                <X className="size-3.5" />
-              </button>
-            </aside>
-          </div>
-        )}
 
         {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 sm:pb-32 lg:py-10 lg:pb-32">
