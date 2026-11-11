@@ -1,3 +1,4 @@
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,30 +31,44 @@ export function DeleteDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="gap-2">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="size-5 shrink-0" />
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
+      <DialogContent
+        className="sm:max-w-md p-6 gap-5"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="gap-2.5">
+          <div className="flex items-center gap-2.5 text-destructive">
+            <div className="flex size-9 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="size-5 shrink-0" />
+            </div>
+            <DialogTitle className="text-lg font-bold">Confirmar Exclusão</DialogTitle>
           </div>
-          <DialogDescription className="text-sm">
+          <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
             Tem certeza de que deseja excluir permanentemente o{" "}
             {pendingDelete?.type === "preset" ? "preset" : "tarefa"}{" "}
-            <strong>"{pendingDelete?.name}"</strong>? Esta ação não pode ser desfeita.
+            <strong className="text-foreground">"{pendingDelete?.name}"</strong>? Esta ação não pode ser desfeita.
           </DialogDescription>
         </DialogHeader>
 
-        <DialogFooter className="gap-2 pt-2 sm:justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
+        <DialogFooter className="pt-2 gap-2 flex-col sm:flex-row-reverse sm:justify-start">
           <Button
             type="button"
             variant="destructive"
+            className="w-full sm:w-auto h-11 rounded-full font-bold shadow-md"
             onClick={onConfirm}
           >
             Confirmar Exclusão
           </Button>
+          <DialogPrimitive.Close asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto h-11 rounded-full font-medium"
+              onClick={onCancel}
+            >
+              Cancelar
+            </Button>
+          </DialogPrimitive.Close>
         </DialogFooter>
       </DialogContent>
     </Dialog>

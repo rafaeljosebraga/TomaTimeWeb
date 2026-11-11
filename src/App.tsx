@@ -466,6 +466,14 @@ export function App() {
     }
   }
 
+  function handleSaveTaskTitle(id: string, newTitle: string) {
+    const result = updateTask(id, { title: newTitle });
+    if (result.isValid) {
+      setTasks(loadTasks());
+      setGlobalMessage("Tarefa atualizada com sucesso.");
+    }
+  }
+
   return (
     <ThemeProvider defaultTheme="system">
       <div className="flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200">
@@ -537,22 +545,27 @@ export function App() {
               />
             </div>
 
-            {/* Coluna 2 (Desktop): Painel de Tarefas Deslizando da Direita para a Esquerda */}
-            {isTasksPanelOpen && (
-              <div className="hidden lg:flex flex-col shrink-0 w-[440px] animate-in fade-in slide-in-from-right duration-300">
-                <div className="w-[440px] h-full flex flex-col">
-                  <TaskPanel
-                    tasks={tasks}
-                    onOpenCreateDialog={handleOpenCreateTaskDialog}
-                    onEditTask={handleEditTask}
-                    onRequestDeleteTask={handleRequestDeleteTask}
-                    onQuickChangeState={handleQuickChangeTaskState}
-                    onQuickChangePriority={handleQuickChangeTaskPriority}
-                    onClose={() => setIsTasksPanelOpen(false)}
-                  />
-                </div>
+            {/* Coluna 2 (Desktop): Painel de Tarefas Deslizando da Direita para a Esquerda e Recolhendo Suavemente */}
+            <div
+              className={`hidden lg:flex flex-col shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+                isTasksPanelOpen
+                  ? "w-[440px] opacity-100 translate-x-0"
+                  : "w-0 opacity-0 translate-x-12 pointer-events-none"
+              }`}
+            >
+              <div className="w-[440px] h-full flex flex-col">
+                <TaskPanel
+                  tasks={tasks}
+                  onOpenCreateDialog={handleOpenCreateTaskDialog}
+                  onEditTask={handleEditTask}
+                  onRequestDeleteTask={handleRequestDeleteTask}
+                  onQuickChangeState={handleQuickChangeTaskState}
+                  onQuickChangePriority={handleQuickChangeTaskPriority}
+                  onUpdateTaskTitle={handleSaveTaskTitle}
+                  onClose={() => setIsTasksPanelOpen(false)}
+                />
               </div>
-            )}
+            </div>
           </div>
 
           {/* Drawer / Bottom Sheet Mobile: Tarefas surgindo de Baixo para Cima sobrepondo a tela (renderizado exclusivamente em telas menores que lg) */}
@@ -663,6 +676,7 @@ export function App() {
                   onRequestDeleteTask={handleRequestDeleteTask}
                   onQuickChangeState={handleQuickChangeTaskState}
                   onQuickChangePriority={handleQuickChangeTaskPriority}
+                  onUpdateTaskTitle={handleSaveTaskTitle}
                   onClose={() => {
                     setDragOffsetY(0);
                     setIsTasksPanelOpen(false);
@@ -688,14 +702,14 @@ export function App() {
         </main>
 
         {/* Rodapé da Aplicação */}
-        <footer className="mt-auto border-t border-border bg-background">
+        {/* <footer className="mt-auto border-t border-border bg-background">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6">
             <p>
               Técnica Pomodoro: blocos de foco intercalados com pausas curtas e uma pausa longa a cada ciclo.
             </p>
             <p>Seus dados ficam salvos exclusivamente neste navegador via localStorage.</p>
           </div>
-        </footer>
+        </footer> */}
 
         {/* Modal de Formulário de Tarefas */}
         <TaskDialog

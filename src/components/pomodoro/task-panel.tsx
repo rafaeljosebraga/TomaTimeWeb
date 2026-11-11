@@ -22,6 +22,7 @@ interface TaskPanelProps {
   onRequestDeleteTask: (task: Task) => void;
   onQuickChangeState: (id: string, state: TaskState) => void;
   onQuickChangePriority: (id: string, priority: TaskPriority) => void;
+  onUpdateTaskTitle?: (id: string, title: string) => void;
   onClose?: () => void;
 }
 
@@ -32,6 +33,7 @@ export function TaskPanel({
   onRequestDeleteTask,
   onQuickChangeState,
   onQuickChangePriority,
+  onUpdateTaskTitle,
   onClose,
 }: TaskPanelProps) {
   const pendingCount = tasks.filter(
@@ -91,6 +93,7 @@ export function TaskPanel({
                 onRequestDeleteTask={onRequestDeleteTask}
                 onQuickChangeState={onQuickChangeState}
                 onQuickChangePriority={onQuickChangePriority}
+                onUpdateTitle={onUpdateTaskTitle}
               />
             ))}
           </ul>
