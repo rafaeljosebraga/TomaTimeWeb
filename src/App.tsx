@@ -2,8 +2,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, X } from "lucide-react";
 import { TomatimerIcon } from "@/components/icons/tomatimer-icon";
+import { primeAudioContext, playPhaseEndAlert } from "@/lib/audio/sound-alert";
 import {
   type PresetValidationErrors,
   type SessionTimer,
@@ -96,13 +96,11 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 export function App() {
-  // 1. Estado de presets e seleção
   const [presets, setPresets] = useState<TimerPreset[]>(() => loadPresets());
   const [activePresetId, setActiveId] = useState<string>(() =>
     getActivePresetId()
   );
 
-  // 2. Estado do temporizador de sessão
   const [isResumedSession, setIsResumedSession] = useState<boolean>(() =>
     hasStoredActiveSession()
   );
@@ -112,13 +110,11 @@ export function App() {
     return loadSessionTimer(active);
   });
 
-  // 3. Estado do formulário de criação/edição de preset
   const [formData, setFormData] = useState<PresetFormData>(INITIAL_FORM_DATA);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<PresetValidationErrors>({});
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
 
-  // 4. Estado de Tarefas (Tasks)
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [taskFormData, setTaskFormData] = useState<TaskFormData>(INITIAL_TASK_FORM);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -129,10 +125,8 @@ export function App() {
   const [isDraggingSheet, setIsDraggingSheet] = useState<boolean>(false);
   const dragStartYRef = useRef<number | null>(null);
 
-  // 5. Estado de confirmação explícita de exclusão
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
-  // 6. Estado de confirmação genérica
   const [pendingConfirm, setPendingConfirm] = useState<ConfirmAction | null>(null);
 
   // Sincroniza o temporizador a cada segundo quando estiver rodando
@@ -142,6 +136,10 @@ export function App() {
     const intervalId = window.setInterval(() => {
       setTimer((prevTimer) => {
         const nextTimer = tickSessionTimer(prevTimer);
+        // Emite alerta sonoro assim que a fase atual é zerada / concluída
+        if (prevTimer.phase === "running" && nextTimer.phase === "completed") {
+          playPhaseEndAlert();
+        }
         saveSessionTimer(nextTimer);
         return nextTimer;
       });
@@ -177,6 +175,7 @@ export function App() {
 
   // Controles do timer
   function handleStart() {
+    primeAudioContext();
     const updated = startSessionTimer(timer);
     setTimer(updated);
     saveSessionTimer(updated);
@@ -189,6 +188,7 @@ export function App() {
   }
 
   function handleResume() {
+    primeAudioContext();
     const updated = resumeSessionTimer(timer);
     setTimer(updated);
     saveSessionTimer(updated);
