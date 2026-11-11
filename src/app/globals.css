@@ -91,6 +91,29 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.custom-scrollbar-h {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 160, 160, 0.45) transparent;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+.custom-scrollbar-h::-webkit-scrollbar {
+  height: 3px;
+}
+.custom-scrollbar-h::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-h::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(160, 160, 160, 0.45);
+}
+.dark .custom-scrollbar-h {
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+.dark .custom-scrollbar-h::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 @keyframes slideUpSheet {
   from {
     transform: translateY(100%);

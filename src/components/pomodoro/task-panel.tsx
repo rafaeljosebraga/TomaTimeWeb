@@ -43,10 +43,12 @@ export function TaskPanel({
   const sortedTasks = sortTasks(tasks);
 
   return (
-    <Card className="flex flex-col h-full border-0 lg:border border-border bg-transparent lg:bg-card shadow-none lg:shadow-xl dark:lg:shadow-[0_20px_50px_rgba(0,0,0,0.7)] dark:border-border/80 justify-between px-2 sm:px-6 pt-5 pb-1 sm:pt-6 sm:pb-1.5">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 p-0 pb-3 shrink-0">
-        <div className="space-y-0.5 min-w-0 pr-1">
-          <CardTitle className="text-base sm:text-lg font-bold tracking-tight truncate">Tarefas de Estudo</CardTitle>
+    <Card className="flex flex-col h-full border-0 lg:border border-border bg-transparent lg:bg-card shadow-none lg:shadow-xl dark:lg:shadow-[0_20px_50px_rgba(0,0,0,0.7)] dark:border-border/80 justify-between px-0 sm:px-6 pt-1 sm:pt-6 pb-1 sm:pb-1.5">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 p-0 pb-3 shrink-0">
+        <div className="space-y-0.5 min-w-0 pr-1 flex-1">
+          <CardTitle className="text-base sm:text-lg font-bold tracking-tight truncate">
+            Tarefas de Estudo
+          </CardTitle>
           <CardDescription className="text-xs truncate">
             {tasks.length === 0
               ? "Organize o que você precisa estudar"
@@ -54,13 +56,13 @@ export function TaskPanel({
           </CardDescription>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <Button
             size="sm"
-            className="h-9 gap-1.5 px-3.5 text-xs font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-sm"
+            className="h-8 sm:h-9 gap-1.5 px-3.5 text-xs font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-sm shrink-0 whitespace-nowrap"
             onClick={onOpenCreateDialog}
           >
-            <Plus className="size-4" />
+            <Plus className="size-3.5 sm:size-4 shrink-0" />
             <span>Nova Tarefa</span>
           </Button>
         </div>

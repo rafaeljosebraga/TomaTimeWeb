@@ -506,7 +506,7 @@ export function App() {
         </header>
 
         {/* Área Principal Responsiva: Centralizada Perfeitamente na Vertical e Horizontal sem scroll */}
-        <main className="mx-auto w-full max-w-6xl flex-1 flex flex-col justify-center px-4 py-2 pb-20 sm:px-6 sm:py-3 sm:pb-24 lg:py-4 lg:pb-24 overflow-x-hidden">
+        <main className="mx-auto w-full max-w-6xl flex-1 flex flex-col justify-center px-3 py-3 pb-24 sm:px-6 sm:py-3 sm:pb-24 lg:py-4 lg:pb-24 overflow-x-hidden">
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}

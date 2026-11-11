@@ -78,7 +78,7 @@ export function CircularTimer({
       aria-label={`${cfg.name}: ${Math.floor(remainingSeconds / 60)} minutos e ${
         remainingSeconds % 60
       } segundos restantes. ${completedCycles} ciclos concluídos.`}
-      className="relative mx-auto size-64 sm:size-72 md:size-80 lg:size-88 shrink-0"
+      className="relative mx-auto w-full max-w-[208px] sm:max-w-none sm:size-72 md:size-80 lg:size-88 aspect-square shrink-0"
     >
       <svg viewBox="0 0 240 240" className="size-full -rotate-90">
         <defs>
@@ -140,7 +140,7 @@ export function CircularTimer({
 
         <p
           aria-hidden
-          className="text-5xl sm:text-6xl md:text-7xl font-bold tabular-nums tracking-tight font-mono"
+          className="text-4xl sm:text-6xl md:text-7xl font-bold tabular-nums tracking-tight font-mono"
         >
           {formattedTime}
         </p>
