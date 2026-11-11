@@ -101,7 +101,7 @@ export function TimerPanel({
   const progress = 1 - timer.remainingMs / totalDurationMs;
 
   return (
-    <Card className="gap-6 px-4 py-8 sm:px-8 flex flex-col justify-between">
+    <Card className="h-full gap-6 px-4 py-8 sm:px-8 flex flex-col justify-between shadow-xl">
       {/* Seletor visual de fases */}
       <CardHeader className="flex flex-row justify-center px-0 pb-0 pt-0">
         <div

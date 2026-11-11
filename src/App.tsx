@@ -1,7 +1,7 @@
 // src/App.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, X } from "lucide-react";
 import { TomatimerIcon } from "@/components/icons/tomatimer-icon";
 import {
@@ -124,6 +124,10 @@ export function App() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskFormErrors, setTaskFormErrors] = useState<TaskValidationErrors>({});
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState<boolean>(false);
+  const [isTasksPanelOpen, setIsTasksPanelOpen] = useState<boolean>(false);
+  const [dragOffsetY, setDragOffsetY] = useState<number>(0);
+  const [isDraggingSheet, setIsDraggingSheet] = useState<boolean>(false);
+  const dragStartYRef = useRef<number | null>(null);
 
   // 5. Estado de confirmação explícita de exclusão
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
@@ -487,42 +491,6 @@ export function App() {
           </div>
         </header>
 
-        {/* Aviso de Sessão Ativa Retomada (UC10 / UC11) */}
-        {isResumedSession && (timer.phase === "running" || timer.phase === "paused") && (
-          <div className="border-b border-primary/20 bg-primary/10">
-            <aside
-              role="alert"
-              className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-2 text-xs sm:px-6"
-            >
-              <div className="flex items-center gap-2">
-                <AlertCircle className="size-4 text-primary shrink-0" aria-hidden />
-                <span>
-                  <strong>Sessão retomada automaticamente:</strong> Uma sessão anterior do preset "
-                  {timer.preset.name}" foi recuperada de onde parou.
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleDiscardResumedSession}
-                  className="rounded px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
-                >
-                  Descartar sessão retomada
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsResumedSession(false)}
-                  className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5 rounded-sm"
-                  aria-label="Dispensar aviso de retomada"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            </aside>
-          </div>
-        )}
-
-
         {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 sm:pb-32 lg:py-10 lg:pb-32">
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
@@ -542,42 +510,169 @@ export function App() {
             onRequestDeletePreset={handleRequestDeletePreset}
           />
 
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-            {/* Coluna 1: Painel do Temporizador */}
-            <TimerPanel
-              timer={timer}
-              presets={presets}
-              activePresetId={activePresetId}
-              formData={formData}
-              editingId={editingId}
-              formErrors={formErrors}
-              onStart={handleStart}
-              onPause={handlePause}
-              onResume={handleResume}
-              onReset={handleReset}
-              onResetCycles={handleResetCycles}
-              onSkipStage={handleSkipStage}
-              onEndSession={handleEndSession}
-              onSelectActivePreset={handleSelectActivePreset}
-              onFormDataChange={setFormData}
-              onSavePreset={handleSavePreset}
-              onStartEdit={handleStartEdit}
-              onCancelEdit={handleCancelEdit}
-              onRequestDeletePreset={handleRequestDeletePreset}
-            />
+          {/* Layout Principal com Transição do Painel de Tarefas */}
+          <div className="flex flex-col lg:flex-row items-stretch justify-center gap-6">
+            {/* Coluna 1: Painel do Temporizador Central */}
+            <div className={`w-full transition-all duration-300 ease-in-out flex flex-col ${isTasksPanelOpen ? "lg:max-w-2xl" : "max-w-3xl mx-auto"}`}>
+              <TimerPanel
+                timer={timer}
+                presets={presets}
+                activePresetId={activePresetId}
+                formData={formData}
+                editingId={editingId}
+                formErrors={formErrors}
+                onStart={handleStart}
+                onPause={handlePause}
+                onResume={handleResume}
+                onReset={handleReset}
+                onResetCycles={handleResetCycles}
+                onSkipStage={handleSkipStage}
+                onEndSession={handleEndSession}
+                onSelectActivePreset={handleSelectActivePreset}
+                onFormDataChange={setFormData}
+                onSavePreset={handleSavePreset}
+                onStartEdit={handleStartEdit}
+                onCancelEdit={handleCancelEdit}
+                onRequestDeletePreset={handleRequestDeletePreset}
+              />
+            </div>
 
-            {/* Coluna 2: Painel de Tarefas */}
-            <TaskPanel
-              tasks={tasks}
-              onOpenCreateDialog={handleOpenCreateTaskDialog}
-              onEditTask={handleEditTask}
-              onRequestDeleteTask={handleRequestDeleteTask}
-              onQuickChangeState={handleQuickChangeTaskState}
-              onQuickChangePriority={handleQuickChangeTaskPriority}
-            />
+            {/* Coluna 2 (Desktop): Painel de Tarefas Deslizando da Direita para a Esquerda */}
+            {isTasksPanelOpen && (
+              <div className="hidden lg:flex flex-col shrink-0 w-[440px] animate-in fade-in slide-in-from-right duration-300">
+                <div className="w-[440px] h-full flex flex-col">
+                  <TaskPanel
+                    tasks={tasks}
+                    onOpenCreateDialog={handleOpenCreateTaskDialog}
+                    onEditTask={handleEditTask}
+                    onRequestDeleteTask={handleRequestDeleteTask}
+                    onQuickChangeState={handleQuickChangeTaskState}
+                    onQuickChangePriority={handleQuickChangeTaskPriority}
+                    onClose={() => setIsTasksPanelOpen(false)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Barra Flutuante de Controles Abaixo do Card, Centralizada na Página */}
+          {/* Drawer / Bottom Sheet Mobile: Tarefas surgindo de Baixo para Cima sobrepondo a tela (renderizado exclusivamente em telas menores que lg) */}
+          <div
+            className={`fixed inset-0 z-50 flex flex-col justify-end transition-all duration-300 lg:hidden ${
+              isTasksPanelOpen ? "pointer-events-auto visible" : "pointer-events-none invisible"
+            }`}
+          >
+            {/* Backdrop escuro com blur com transição de opacidade suave */}
+            <div
+              className={`fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 ease-out ${
+                isTasksPanelOpen ? "opacity-100" : "opacity-0"
+              }`}
+              onClick={() => setIsTasksPanelOpen(false)}
+              aria-hidden="true"
+            />
+            {/* Conteúdo deslizando de baixo para cima com transition translate-y */}
+            <aside
+              role="dialog"
+              aria-label="Painel de Tarefas"
+              aria-modal="true"
+              style={{
+                transform: isTasksPanelOpen
+                  ? `translateY(${dragOffsetY}px)`
+                  : "translateY(100%)",
+                transition: isDraggingSheet ? "none" : "transform 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+              }}
+              className="relative z-10 w-full max-h-[88vh] rounded-t-3xl border-t border-border bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 px-4 pt-3 pb-6 shadow-2xl flex flex-col overflow-hidden will-change-transform"
+            >
+              {/* Alça visual de arrasto no topo: clique fecha, arrastar para baixo fecha */}
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Puxador: arraste para baixo ou clique para fechar tarefas"
+                title="Fechar tarefas"
+                onClick={() => {
+                  setDragOffsetY(0);
+                  setIsTasksPanelOpen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setDragOffsetY(0);
+                    setIsTasksPanelOpen(false);
+                  }
+                }}
+                onTouchStart={(e) => {
+                  const touch = e.touches[0];
+                  if (!touch) return;
+                  dragStartYRef.current = touch.clientY;
+                  setIsDraggingSheet(true);
+                }}
+                onTouchMove={(e) => {
+                  if (dragStartYRef.current === null) return;
+                  const touch = e.touches[0];
+                  if (!touch) return;
+                  const currentY = touch.clientY;
+                  const deltaY = currentY - dragStartYRef.current;
+                  if (deltaY > 0) {
+                    setDragOffsetY(deltaY);
+                  }
+                }}
+                onTouchEnd={() => {
+                  setIsDraggingSheet(false);
+                  if (dragOffsetY > 80) {
+                    setDragOffsetY(0);
+                    setIsTasksPanelOpen(false);
+                  } else {
+                    setDragOffsetY(0);
+                  }
+                  dragStartYRef.current = null;
+                }}
+                onMouseDown={(e) => {
+                  dragStartYRef.current = e.clientY;
+                  setIsDraggingSheet(true);
+                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                    if (dragStartYRef.current === null) return;
+                    const deltaY = moveEvent.clientY - dragStartYRef.current;
+                    if (deltaY > 0) {
+                      setDragOffsetY(deltaY);
+                    }
+                  };
+                  const handleMouseUp = () => {
+                    setIsDraggingSheet(false);
+                    setDragOffsetY((currentOffset) => {
+                      if (currentOffset > 80) {
+                        setIsTasksPanelOpen(false);
+                      }
+                      return 0;
+                    });
+                    dragStartYRef.current = null;
+                    window.removeEventListener("mousemove", handleMouseMove);
+                    window.removeEventListener("mouseup", handleMouseUp);
+                  };
+                  window.addEventListener("mousemove", handleMouseMove);
+                  window.addEventListener("mouseup", handleMouseUp);
+                }}
+                className="mx-auto -mt-1 mb-2.5 flex h-6 w-full items-center justify-center cursor-pointer touch-none select-none group"
+              >
+                <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
+              </div>
+
+              <div className="overflow-y-auto flex-1 pr-1 custom-scrollbar">
+                <TaskPanel
+                  tasks={tasks}
+                  onOpenCreateDialog={handleOpenCreateTaskDialog}
+                  onEditTask={handleEditTask}
+                  onRequestDeleteTask={handleRequestDeleteTask}
+                  onQuickChangeState={handleQuickChangeTaskState}
+                  onQuickChangePriority={handleQuickChangeTaskPriority}
+                  onClose={() => {
+                    setDragOffsetY(0);
+                    setIsTasksPanelOpen(false);
+                  }}
+                />
+              </div>
+            </aside>
+          </div>
+
+          {/* Barra Flutuante de Controles Abaixo do Card com Botão de Tarefas ao Lado */}
           <BottomControlBar
             timer={timer}
             onStart={handleStart}
@@ -587,6 +682,8 @@ export function App() {
             onResetCycles={handleResetCycles}
             onSkipStage={handleSkipStage}
             onEndSession={handleEndSession}
+            isTasksOpen={isTasksPanelOpen}
+            onToggleTasks={() => setIsTasksPanelOpen((prev) => !prev)}
           />
         </main>
 

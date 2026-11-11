@@ -60,12 +60,12 @@ export function TaskItem({
 
   return (
     <li
-      className={`group flex items-start gap-3 rounded-xl border p-3.5 transition-colors ${
+      className={`group flex items-start gap-3 rounded-2xl border p-4 transition-colors ${
         task.state === "em execução"
-          ? "border-emerald-500/40 bg-emerald-500/5 shadow-xs"
+          ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm"
           : isDone
-          ? "border-border bg-card/60 opacity-80"
-          : "border-border bg-card hover:bg-accent/30"
+          ? "border-border/70 bg-neutral-100/80 text-muted-foreground dark:bg-neutral-900/60 dark:border-neutral-800 opacity-80"
+          : "border-border/80 bg-neutral-50/90 hover:bg-neutral-100/90 dark:bg-neutral-900/90 dark:hover:bg-neutral-900 dark:border-neutral-800 text-foreground"
       }`}
     >
       <Checkbox
@@ -76,23 +76,23 @@ export function TaskItem({
             ? `Reabrir tarefa ${task.title}`
             : `Marcar tarefa ${task.title} como concluída`
         }
-        className="mt-1"
+        className="mt-0.5 size-5 rounded-md border-neutral-400 dark:border-neutral-600 data-[state=checked]:bg-neutral-900 data-[state=checked]:text-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-neutral-900"
       />
 
       <div className="min-w-0 flex-1">
         <p
-          className={`text-sm font-medium leading-snug break-words ${
-            isDone ? "text-muted-foreground line-through" : ""
+          className={`text-sm sm:text-base font-semibold leading-snug break-words ${
+            isDone ? "text-muted-foreground line-through opacity-70" : "text-neutral-900 dark:text-neutral-50"
           }`}
           title={task.title}
         >
           {task.title}
         </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
           <StatusBadge state={task.state} pulse={task.state === "em execução"} />
           <PriorityBadge priority={task.priority} />
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
             {new Date(task.createdAt).toLocaleDateString("pt-BR", {
               day: "2-digit",
               month: "2-digit",
@@ -107,7 +107,7 @@ export function TaskItem({
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground hover:text-foreground"
+              className="size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-neutral-200/60 dark:hover:bg-neutral-800"
               aria-label={`Ações para tarefa ${task.title}`}
             >
               <MoreVertical className="size-4" />
