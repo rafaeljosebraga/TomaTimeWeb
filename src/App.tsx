@@ -2,7 +2,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Timer, AlertCircle, X } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
+import { TomatimerIcon } from "@/components/icons/tomatimer-icon";
 import {
   type PresetValidationErrors,
   type SessionTimer,
@@ -467,9 +468,7 @@ export function App() {
         <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                <Timer className="size-4.5" aria-hidden />
-              </div>
+              <TomatimerIcon className="size-7 sm:size-8 shrink-0 text-foreground" aria-hidden />
               <div className="leading-tight">
                 <p className="text-sm font-semibold tracking-tight">Tomatimer</p>
                 <p className="hidden text-xs text-muted-foreground sm:block">
