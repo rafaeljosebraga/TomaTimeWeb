@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Palette, Settings, MoreHorizontal, Sun, Moon } from "lucide-react";
+import { Palette, Settings, MoreHorizontal, Sun, Moon, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/theme-provider";
 import { PresetsDialog } from "@/components/pomodoro/presets-dialog";
+import { playPhaseEndAlert, primeAudioContext } from "@/lib/audio/sound-alert";
 import type { PresetValidationErrors, TimerPreset } from "@/types/domain";
 
 type PresetFormData = {
@@ -68,6 +69,22 @@ export function QuickActionSidebar({
         <Button
           variant="ghost"
           size="icon"
+          onClick={() => {
+            primeAudioContext();
+            playPhaseEndAlert();
+          }}
+          className="size-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+          title="Testar alarme sonoro (alerta de fim de fase)"
+          aria-label="Testar alarme sonoro de fim de fase"
+        >
+          <Volume2 className="size-5 transition-transform hover:scale-110" />
+        </Button>
+
+        <div className="w-5 h-px bg-border/60 my-0.5" aria-hidden />
+
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setIsPresetsOpen(true)}
           className="size-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
           title="Configurações de temporizadores (presets)"
@@ -123,6 +140,22 @@ export function QuickActionSidebar({
                 aria-label="Alternar tema"
               >
                 <Palette className="size-4" />
+              </Button>
+
+              <div className="w-px h-4 bg-border/60" aria-hidden />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  primeAudioContext();
+                  playPhaseEndAlert();
+                }}
+                className="size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                title="Testar alarme sonoro"
+                aria-label="Testar alarme sonoro"
+              >
+                <Volume2 className="size-4" />
               </Button>
 
               <div className="w-px h-4 bg-border/60" aria-hidden />

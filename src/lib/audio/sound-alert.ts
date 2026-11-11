@@ -1,6 +1,5 @@
 // src/lib/audio/sound-alert.ts
 // Módulo de alerta sonoro via Web Audio API nativa.
-// Emite um sinal harmônico agradável ao fim de cada fase (RF-14, RN-13, RNF-10, R-01).
 
 let audioCtx: AudioContext | null = null;
 
