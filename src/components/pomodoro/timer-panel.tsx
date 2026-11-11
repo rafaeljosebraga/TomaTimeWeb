@@ -20,13 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import type {
-  PresetValidationErrors,
-  SessionStage,
-  SessionTimer,
-  TimerPreset,
+import {
+  STAGE_DISPLAY_NAMES,
+  type PresetValidationErrors,
+  type SessionStage,
+  type SessionTimer,
+  type TimerPreset,
 } from "@/types/domain";
 import {
+  formatTime,
   getRemainingSeconds,
 } from "@/lib/domain/session-timer";
 import { CircularTimer } from "./circular-timer";
@@ -62,16 +64,10 @@ interface TimerPanelProps {
 }
 
 const STAGES: { stage: SessionStage; label: string }[] = [
-  { stage: "TF", label: "Tempo de Foco" },
-  { stage: "TPC", label: "Pausa Curta" },
-  { stage: "TPL", label: "Pausa Longa" },
+  { stage: "TF", label: STAGE_DISPLAY_NAMES.TF },
+  { stage: "TPC", label: STAGE_DISPLAY_NAMES.TPC },
+  { stage: "TPL", label: STAGE_DISPLAY_NAMES.TPL },
 ];
-
-function formatSeconds(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-}
 
 export function TimerPanel({
   timer,
@@ -95,7 +91,7 @@ export function TimerPanel({
   onRequestDeletePreset,
 }: TimerPanelProps) {
   const remainingSecs = getRemainingSeconds(timer);
-  const remainingFormatted = formatSeconds(remainingSecs);
+  const remainingFormatted = formatTime(remainingSecs);
   const totalDurationMs = timer.durationMs > 0 ? timer.durationMs : 1;
   const progress = 1 - timer.remainingMs / totalDurationMs;
   const activePreset = presets.find((p) => p.id === activePresetId) ?? timer.preset;

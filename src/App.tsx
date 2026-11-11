@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { TomatimerIcon } from "@/components/icons/tomatimer-icon";
 import { primeAudioContext, playPhaseEndAlert } from "@/lib/audio/sound-alert";
 import {
+  STAGE_DISPLAY_NAMES,
   type PresetValidationErrors,
+  type SessionStage,
   type SessionTimer,
   type Task,
   type TaskPriority,
@@ -89,10 +91,10 @@ const INITIAL_TASK_FORM: TaskFormData = {
   priority: "média",
 };
 
-const STAGE_LABELS: Record<string, string> = {
-  TF: "Tempo de Foco (TF)",
-  TPC: "Tempo de Pausa Curta (TPC)",
-  TPL: "Tempo de Pausa Longa (TPL)",
+const STAGE_LABELS: Record<SessionStage, string> = {
+  TF: `${STAGE_DISPLAY_NAMES.TF} (TF)`,
+  TPC: `${STAGE_DISPLAY_NAMES.TPC} (TPC)`,
+  TPL: `${STAGE_DISPLAY_NAMES.TPL} (TPL)`,
 };
 
 export function App() {
