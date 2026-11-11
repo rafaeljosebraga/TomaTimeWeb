@@ -166,9 +166,8 @@ export const DialogContent = React.forwardRef<
         />
         {/* Alça visual no topo do bottom sheet mobile: toque fecha, arrastar para baixo fecha */}
         {handleCloseOnDrag && (
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             aria-label="Puxador: arraste para baixo ou toque para fechar"
             title="Fechar"
             onClick={() => {
@@ -177,12 +176,6 @@ export const DialogContent = React.forwardRef<
                 return;
               }
               triggerClose();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                triggerClose();
-              }
             }}
             onTouchStart={(e) => {
               const touch = e.touches[0];
@@ -239,17 +232,17 @@ export const DialogContent = React.forwardRef<
               window.addEventListener("mousemove", handleMouseMove);
               window.addEventListener("mouseup", handleMouseUp);
             }}
-            className="sm:hidden shrink-0 flex h-7 w-full items-center justify-center cursor-pointer touch-none select-none group"
+            className="sm:hidden shrink-0 flex h-7 w-full items-center justify-center cursor-pointer touch-none select-none group border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
-          </div>
+            <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
+          </button>
         )}
         {/* Área de conteúdo scrollável */}
         <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto overflow-x-hidden p-4 pb-6 sm:p-6 sm:gap-5 custom-scrollbar">
           {children}
         </div>
         {showClose && (
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
             <X className="size-4" />
             <span className="sr-only">Fechar</span>
           </DialogPrimitive.Close>

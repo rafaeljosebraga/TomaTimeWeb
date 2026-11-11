@@ -602,21 +602,13 @@ export function App() {
               className="relative z-10 w-full max-h-[88vh] rounded-t-3xl border-t border-border bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 px-4 pt-3 pb-6 shadow-2xl flex flex-col overflow-hidden will-change-transform"
             >
               {/* Alça visual de arrasto no topo: clique fecha, arrastar para baixo fecha */}
-              <div
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
                 aria-label="Puxador: arraste para baixo ou clique para fechar tarefas"
                 title="Fechar tarefas"
                 onClick={() => {
                   setDragOffsetY(0);
                   setIsTasksPanelOpen(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setDragOffsetY(0);
-                    setIsTasksPanelOpen(false);
-                  }
                 }}
                 onTouchStart={(e) => {
                   const touch = e.touches[0];
@@ -669,10 +661,10 @@ export function App() {
                   window.addEventListener("mousemove", handleMouseMove);
                   window.addEventListener("mouseup", handleMouseUp);
                 }}
-                className="mx-auto -mt-1 mb-2.5 flex h-6 w-full items-center justify-center cursor-pointer touch-none select-none group"
+                className="mx-auto -mt-1 mb-2.5 flex h-6 w-full items-center justify-center cursor-pointer touch-none select-none group border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
-              </div>
+                <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
+              </button>
 
               <div className="overflow-y-auto flex-1 pr-1 custom-scrollbar">
                 <TaskPanel
