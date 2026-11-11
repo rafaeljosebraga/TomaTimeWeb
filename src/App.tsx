@@ -484,20 +484,20 @@ export function App() {
         />
 
         {/* Cabeçalho da Aplicação */}
-        <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-2.5">
-              <TomatimerIcon className="size-7 sm:size-8 shrink-0 text-foreground" aria-hidden />
-              <div className="leading-tight">
-                <p className="text-sm font-semibold tracking-tight">Tomatimer</p>
-                <p className="hidden text-xs text-muted-foreground sm:block">
-                  Temporizador Pomodoro para estudos
-                </p>
-              </div>
+        <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Fio de gradiente decorativo na borda inferior */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent pointer-events-none" />
+          <div className="mx-auto flex h-12 sm:h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* Ícone restaurado para cor neutra (preto / foreground) */}
+              <TomatimerIcon
+                className="size-6 sm:size-7 shrink-0 text-foreground transition-colors"
+                aria-hidden
+              />
+              <p className="text-sm font-bold tracking-tight">Tomatimer</p>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* No mobile o ThemeToggle fica antes do menu ... */}
               <div className="hidden sm:block">
                 <ThemeToggle />
               </div>

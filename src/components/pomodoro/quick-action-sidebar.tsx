@@ -101,7 +101,7 @@ export function QuickActionSidebar({
           variant="ghost"
           size="icon"
           onClick={() => setTheme(isDark ? "light" : "dark")}
-          className="size-9 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+          className="size-8 rounded-full bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title={isDark ? "Tema claro" : "Tema escuro"}
           aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
         >
@@ -115,13 +115,15 @@ export function QuickActionSidebar({
             variant="ghost"
             size="icon"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`size-9 rounded-full text-muted-foreground hover:text-foreground transition-colors ${
-              isMobileMenuOpen ? "bg-muted text-foreground" : ""
+            className={`size-8 rounded-full transition-colors ${
+              isMobileMenuOpen
+                ? "bg-muted text-foreground"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
             aria-label={isMobileMenuOpen ? "Fechar menu de opções" : "Abrir menu de opções"}
             title="Mais opções"
           >
-            <MoreHorizontal className="size-5" />
+            <MoreHorizontal className="size-4" />
           </Button>
 
           {/* Pílula que desce ABAIXO dos 3 pontinhos */}
