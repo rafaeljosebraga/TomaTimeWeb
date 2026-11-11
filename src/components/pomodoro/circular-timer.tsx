@@ -18,28 +18,42 @@ interface CircularTimerProps {
 
 const STAGE_CONFIG: Record<
   SessionStage,
-  { name: string; ring: string; pill: string; dot: string; text: string }
+  {
+    name: string;
+    ring: string;
+    pill: string;
+    dot: string;
+    text: string;
+    filterId: string;
+    glowColor: string;
+  }
 > = {
   TF: {
     name: "Foco",
-    ring: "stroke-emerald-500 text-emerald-500",
+    ring: "stroke-emerald-600 dark:stroke-emerald-400 text-emerald-600 dark:text-emerald-400",
     pill: "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-500/25 dark:text-emerald-300",
     dot: "bg-emerald-500",
     text: "text-emerald-600 dark:text-emerald-400",
+    filterId: "glow-focus",
+    glowColor: "rgba(16, 185, 129, 0.45)",
   },
   TPC: {
     name: "Pausa Curta",
-    ring: "stroke-amber-500 text-amber-500",
+    ring: "stroke-amber-600 dark:stroke-amber-400 text-amber-600 dark:text-amber-400",
     pill: "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-500/25 dark:text-amber-300",
     dot: "bg-amber-500",
     text: "text-amber-600 dark:text-amber-400",
+    filterId: "glow-short-break",
+    glowColor: "rgba(245, 158, 11, 0.45)",
   },
   TPL: {
     name: "Pausa Longa",
-    ring: "stroke-rose-500 text-rose-500",
+    ring: "stroke-rose-600 dark:stroke-rose-400 text-rose-600 dark:text-rose-400",
     pill: "bg-rose-500/10 text-rose-700 ring-1 ring-inset ring-rose-500/25 dark:text-rose-300",
     dot: "bg-rose-500",
     text: "text-rose-600 dark:text-rose-400",
+    filterId: "glow-long-break",
+    glowColor: "rgba(244, 63, 94, 0.45)",
   },
 };
 
@@ -64,19 +78,30 @@ export function CircularTimer({
       aria-label={`${cfg.name}: ${Math.floor(remainingSeconds / 60)} minutos e ${
         remainingSeconds % 60
       } segundos restantes. ${completedCycles} ciclos concluídos.`}
-      className="relative mx-auto size-56 sm:size-64 md:size-72 shrink-0"
+      className="relative mx-auto size-64 sm:size-72 md:size-80 lg:size-88 shrink-0"
     >
       <svg viewBox="0 0 240 240" className="size-full -rotate-90">
-        {/* Circunferência base inativa (trilho sutil) */}
+        <defs>
+          <filter id="ring-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="5"
+              floodColor={cfg.glowColor}
+            />
+          </filter>
+        </defs>
+
+        {/* Circunferência base inativa (trilho com ótima nitidez nos temas claro e escuro) */}
         <circle
           cx="120"
           cy="120"
           r={RADIUS}
           fill="none"
           strokeWidth="10"
-          className="stroke-muted/40 dark:stroke-muted/60"
+          className="stroke-neutral-200 dark:stroke-neutral-800"
         />
-        {/* Linha de progresso proporcional que vai sendo preenchida até fechar o círculo */}
+        {/* Linha de progresso proporcional com sombra neon sutil que acompanha o trajeto */}
         <circle
           cx="120"
           cy="120"
@@ -87,6 +112,7 @@ export function CircularTimer({
           strokeLinecap="round"
           strokeDasharray={CIRCUMFERENCE}
           strokeDashoffset={offset}
+          filter="url(#ring-glow)"
           style={{
             opacity: clampedProgress > 0 ? 1 : 0,
           }}
@@ -96,7 +122,7 @@ export function CircularTimer({
         />
       </svg>
 
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${cfg.pill}`}
         >
@@ -114,7 +140,7 @@ export function CircularTimer({
 
         <p
           aria-hidden
-          className="text-5xl sm:text-6xl md:text-7xl font-semibold tabular-nums tracking-tight font-mono"
+          className="text-5xl sm:text-6xl md:text-7xl font-bold tabular-nums tracking-tight font-mono"
         >
           {formattedTime}
         </p>

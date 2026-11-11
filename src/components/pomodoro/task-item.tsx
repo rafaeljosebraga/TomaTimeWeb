@@ -115,10 +115,10 @@ export function TaskItem({
     <li
       className={`group flex items-start gap-3 rounded-2xl border p-4 transition-colors ${
         task.state === "em execução"
-          ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm"
+          ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm dark:bg-emerald-950/20 dark:border-emerald-500/40"
           : isDone
-          ? "border-border/70 bg-neutral-100/80 text-muted-foreground dark:bg-neutral-900/60 dark:border-neutral-800 opacity-80"
-          : "border-border/80 bg-neutral-50/90 hover:bg-neutral-100/90 dark:bg-neutral-900/90 dark:hover:bg-neutral-900 dark:border-neutral-800 text-foreground"
+          ? "border-border/70 bg-neutral-100/80 text-muted-foreground dark:bg-neutral-900/60 dark:border-neutral-800/80 opacity-75"
+          : "border-border/80 bg-neutral-50/90 hover:bg-neutral-100/90 dark:bg-neutral-900/90 dark:hover:bg-neutral-850 dark:border-neutral-800 dark:hover:border-neutral-700 text-foreground"
       }`}
     >
       <Checkbox

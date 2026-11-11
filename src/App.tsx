@@ -476,7 +476,13 @@ export function App() {
 
   return (
     <ThemeProvider defaultTheme="system">
-      <div className="flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200">
+      <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200 selection:bg-primary/20">
+        {/* Textura sutil de fundo radial no centro da tela */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(120,119,198,0.06),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(255,255,255,0.04),transparent)]"
+        />
+
         {/* Cabeçalho da Aplicação */}
         <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -499,8 +505,8 @@ export function App() {
           </div>
         </header>
 
-        {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 sm:pb-32 lg:py-10 lg:pb-32">
+        {/* Área Principal Responsiva: Centralizada Perfeitamente na Vertical e Horizontal sem scroll */}
+        <main className="mx-auto w-full max-w-6xl flex-1 flex flex-col justify-center px-4 py-2 pb-20 sm:px-6 sm:py-3 sm:pb-24 lg:py-4 lg:pb-24 overflow-x-hidden">
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
@@ -521,7 +527,7 @@ export function App() {
           {/* Layout Principal com Transição do Painel de Tarefas */}
           <div className="flex flex-col lg:flex-row items-stretch justify-center gap-6">
             {/* Coluna 1: Painel do Temporizador Central */}
-            <div className={`w-full transition-all duration-300 ease-in-out flex flex-col ${isTasksPanelOpen ? "lg:max-w-2xl" : "max-w-3xl mx-auto"}`}>
+            <div className={`w-full transition-all duration-300 ease-in-out flex flex-col ${isTasksPanelOpen ? "lg:max-w-xl xl:max-w-2xl" : "max-w-3xl lg:max-w-4xl mx-auto"}`}>
               <TimerPanel
                 timer={timer}
                 presets={presets}
@@ -547,13 +553,13 @@ export function App() {
 
             {/* Coluna 2 (Desktop): Painel de Tarefas Deslizando da Direita para a Esquerda e Recolhendo Suavemente */}
             <div
-              className={`hidden lg:flex flex-col shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`hidden lg:flex flex-col shrink-0 transition-all duration-300 ease-in-out ${
                 isTasksPanelOpen
-                  ? "w-[440px] opacity-100 translate-x-0"
-                  : "w-0 opacity-0 translate-x-12 pointer-events-none"
+                  ? "w-[400px] xl:w-[440px] opacity-100"
+                  : "w-0 opacity-0 pointer-events-none overflow-hidden"
               }`}
             >
-              <div className="w-[440px] h-full flex flex-col">
+              <div className="w-[400px] xl:w-[440px] h-full flex flex-col">
                 <TaskPanel
                   tasks={tasks}
                   onOpenCreateDialog={handleOpenCreateTaskDialog}

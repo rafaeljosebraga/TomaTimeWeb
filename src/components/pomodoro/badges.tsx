@@ -12,15 +12,15 @@ const STATE_LABELS: Record<TaskState, string> = {
 
 const STATE_CLASSES: Record<TaskState, string> = {
   backlog:
-    "border-neutral-300 bg-neutral-200/60 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-200",
+    "border-neutral-300 bg-neutral-200/60 text-neutral-800 dark:border-neutral-700/80 dark:bg-neutral-800/90 dark:text-neutral-200",
   "a fazer":
-    "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300 dark:bg-amber-500/20",
+    "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-200 dark:bg-amber-500/25 dark:border-amber-500/50",
   "em execução":
-    "border-emerald-500/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 dark:bg-emerald-500/20",
+    "border-emerald-500/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 dark:bg-emerald-500/25 dark:border-emerald-500/50",
   "concluída":
-    "border-neutral-800 bg-neutral-800 text-white dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900 font-semibold",
+    "border-neutral-800 bg-neutral-800 text-white dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 font-medium",
   "cancelada":
-    "border-red-500/40 bg-red-500/15 text-red-800 dark:text-red-300 line-through opacity-85",
+    "border-red-500/40 bg-red-500/15 text-red-800 dark:text-red-300 dark:bg-red-500/25 dark:border-red-500/50 line-through opacity-85",
 };
 
 const STATE_DOT: Record<TaskState, string> = {
@@ -67,11 +67,11 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 };
 
 const PRIORITY_CLASSES: Record<TaskPriority, string> = {
-  alta: "border-red-500/40 bg-red-500/15 text-red-700 dark:text-red-300 dark:bg-red-500/20 font-semibold",
+  alta: "border-red-500/40 bg-red-500/15 text-red-700 dark:text-red-200 dark:bg-red-500/25 dark:border-red-500/50 font-medium",
   média:
-    "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300 dark:bg-amber-500/20 font-semibold",
+    "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-200 dark:bg-amber-500/25 dark:border-amber-500/50 font-medium",
   baixa:
-    "border-neutral-300 bg-neutral-200/60 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-300",
+    "border-neutral-300 bg-neutral-200/60 text-neutral-800 dark:border-neutral-700/80 dark:bg-neutral-800/90 dark:text-neutral-300",
 };
 
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {

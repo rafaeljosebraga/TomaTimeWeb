@@ -39,7 +39,7 @@ export function BottomControlBar({
       {/* Barra Cápsula Flutuante Fixa Centralizada Embaixo */}
       <nav
         aria-label="Controles do temporizador"
-        className="pointer-events-auto flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-full border border-border/80 bg-card/95 px-3.5 py-2 shadow-2xl backdrop-blur-md transition-all hover:bg-card hover:border-border"
+        className="pointer-events-auto flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-full border border-border/80 bg-card/95 px-3.5 py-2 shadow-2xl dark:shadow-[0_15px_40px_rgba(0,0,0,0.85)] dark:border-border backdrop-blur-md transition-all hover:bg-card hover:border-border"
       >
         {/* 1. Botão Secundário: Pular Fase */}
         <Button
@@ -67,12 +67,12 @@ export function BottomControlBar({
           <span className="hidden sm:inline">Ciclos</span>
         </Button>
 
-        {/* 3. BOTÃO PRINCIPAL DE DESTAQUE CENTRAL COM TOOLTIP FLUTUANTE (Preto no Claro / Branco no Escuro) */}
+        {/* 3. BOTÃO PRINCIPAL DE DESTAQUE CENTRAL COM TOOLTIP FLUTUANTE (Largura fixa para não oscilar a barra) */}
         <div className="relative group/mainbtn flex items-center justify-center">
           {timer.phase === "idle" && (
             <Button
               size="lg"
-              className="h-12 rounded-full px-7 sm:px-9 text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
+              className="h-12 w-36 sm:w-44 rounded-full text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
               onClick={onStart}
               aria-label="Iniciar temporizador"
             >
@@ -84,7 +84,7 @@ export function BottomControlBar({
           {timer.phase === "running" && (
             <Button
               size="lg"
-              className="h-12 rounded-full px-7 sm:px-9 text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
+              className="h-12 w-36 sm:w-44 rounded-full text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
               onClick={onPause}
               aria-label="Pausar temporizador"
             >
@@ -96,7 +96,7 @@ export function BottomControlBar({
           {timer.phase === "paused" && (
             <Button
               size="lg"
-              className="h-12 rounded-full px-7 sm:px-9 text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
+              className="h-12 w-36 sm:w-44 rounded-full text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
               onClick={onResume}
               aria-label="Retomar temporizador"
             >
@@ -108,7 +108,7 @@ export function BottomControlBar({
           {timer.phase === "completed" && (
             <Button
               size="lg"
-              className="h-12 rounded-full px-7 sm:px-9 text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
+              className="h-12 w-36 sm:w-44 rounded-full text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95"
               onClick={onStart}
               aria-label="Iniciar próxima fase"
             >
@@ -136,7 +136,7 @@ export function BottomControlBar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-10 rounded-full px-2.5 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-destructive"
+          className="h-10 rounded-full px-2.5 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/10 dark:hover:text-red-400 dark:hover:bg-red-500/15 transition-colors"
           onClick={onEndSession}
           aria-label="Encerrar sessão ativa"
           title="Encerrar Sessão"

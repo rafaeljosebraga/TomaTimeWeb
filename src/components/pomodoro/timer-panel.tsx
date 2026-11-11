@@ -101,13 +101,13 @@ export function TimerPanel({
   const activePreset = presets.find((p) => p.id === activePresetId) ?? timer.preset;
 
   return (
-    <Card className="h-full gap-6 px-4 py-8 sm:px-8 flex flex-col justify-between shadow-xl">
+    <Card className="h-full gap-5 px-6 py-6 sm:px-8 sm:py-6 flex flex-col justify-between shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] dark:border-border/80">
       {/* Seletor visual de fases */}
       <CardHeader className="flex flex-row justify-center px-0 pb-0 pt-0">
         <div
           role="tablist"
           aria-label="Fase do temporizador"
-          className="inline-flex max-w-full flex-wrap justify-center items-center gap-1 rounded-full bg-muted p-1"
+          className="inline-flex max-w-full flex-wrap justify-center items-center gap-1 rounded-full border border-neutral-200/60 bg-neutral-100/90 p-1 dark:border-neutral-800 dark:bg-neutral-900/80"
         >
           {STAGES.map((s) => {
             const isCurrent = timer.stage === s.stage;
@@ -116,10 +116,10 @@ export function TimerPanel({
                 key={s.stage}
                 role="tab"
                 aria-selected={isCurrent}
-                className={`rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+                className={`rounded-full px-3.5 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                   isCurrent
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground opacity-70"
+                    ? "bg-white text-neutral-900 shadow-xs dark:bg-neutral-800 dark:text-neutral-50 font-semibold"
+                    : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
                 }`}
               >
                 {s.label}
@@ -129,7 +129,7 @@ export function TimerPanel({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col items-center gap-7 px-0 pt-4">
+      <CardContent className="flex flex-col items-center gap-5 px-0 pt-1">
         {/* Temporizador Circular */}
         <CircularTimer
           stage={timer.stage}
@@ -142,31 +142,35 @@ export function TimerPanel({
           onReset={onReset}
         />
 
-        {/* Detalhes de status e ciclos */}
-        <div className="flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
+        {/* Detalhes de status e ciclos (linha estática para não haver salto de layout) */}
+        <div className="flex h-6 items-center justify-center gap-2.5 text-center text-xs sm:text-sm text-muted-foreground">
           <p className="flex items-center gap-1.5 font-medium text-foreground">
             <span>Ciclos de foco concluídos: {timer.completedCycles}</span>
           </p>
-          {timer.endsAt && timer.phase === "running" && (
-            <p className="text-[11px] opacity-80">
-              Fim previsto: {new Date(timer.endsAt).toLocaleTimeString()}
-            </p>
-          )}
+          <span className="text-muted-foreground/40 font-bold">·</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200/80 bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-800 shadow-2xs dark:border-neutral-700/80 dark:bg-neutral-800 dark:text-neutral-100 transition-colors">
+            <TimerIcon className="size-3.5 text-neutral-600 dark:text-neutral-300" />
+            {timer.phase === "running" && timer.endsAt
+              ? `Fim às ${new Date(timer.endsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+              : timer.phase === "paused"
+              ? "Pausado"
+              : "Pronto"}
+          </span>
         </div>
 
-        <Separator className="w-full max-w-sm" />
+        <Separator className="w-full max-w-md" />
 
         {/* Seletor de preset ativo com visual moderno em card pill */}
-        <div className="flex w-full max-w-sm items-center justify-between gap-3 rounded-2xl border border-border/70 bg-neutral-50/70 dark:bg-neutral-900/60 p-2.5 sm:px-3.5 shadow-2xs">
+        <div className="flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-neutral-200/80 bg-neutral-100/90 dark:border-neutral-800 dark:bg-neutral-900/90 p-2.5 sm:px-3.5 shadow-2xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200/60 dark:bg-neutral-800 text-foreground">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100">
               <TimerIcon className="size-4" aria-hidden />
             </div>
             <div className="flex flex-col text-left min-w-0">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider">
                 Preset de estudo
               </span>
-              <span className="text-xs text-muted-foreground/80 truncate">
+              <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 truncate">
                 {activePreset
                   ? `${activePreset.focusMinutes}m · ${activePreset.shortBreakMinutes}m · ${activePreset.cyclesBeforeLongBreak} ciclos`
                   : "Selecione o ritmo"}
@@ -176,7 +180,7 @@ export function TimerPanel({
 
           <Select value={activePresetId} onValueChange={onSelectActivePreset}>
             <SelectTrigger
-              className="h-9 min-w-32 max-w-44 rounded-xl border-border/80 bg-background font-semibold text-xs text-foreground shadow-xs hover:bg-accent transition-colors"
+              className="h-9 min-w-32 max-w-44 rounded-xl border border-neutral-300/80 bg-white dark:border-neutral-700/80 dark:bg-neutral-800 font-semibold text-xs text-neutral-900 dark:text-neutral-50 shadow-xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-colors"
               aria-label="Selecionar preset do timer"
             >
               <span className="truncate">{activePreset?.name ?? "Escolha um preset"}</span>

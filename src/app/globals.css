@@ -42,7 +42,7 @@
     --muted-foreground: 0 0% 63.9%; /* #a3a3a3 */
     --accent: 0 0% 14.9%; /* #262626 */
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%; /* vermelho vibrante com contraste alto */
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 16.5%; /* borda neutra e sutil */
     --input: 0 0% 16.5%;
@@ -63,20 +63,32 @@
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(160, 160, 160, 0.25) transparent;
+  scrollbar-color: rgba(160, 160, 160, 0.2) transparent;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   border-radius: 9999px;
-  background: rgba(160, 160, 160, 0.25);
+  background: rgba(160, 160, 160, 0.2);
+  transition: background-color 0.2s ease;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(160, 160, 160, 0.45);
+}
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 @keyframes slideUpSheet {

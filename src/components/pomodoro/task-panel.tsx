@@ -43,7 +43,7 @@ export function TaskPanel({
   const sortedTasks = sortTasks(tasks);
 
   return (
-    <Card className="flex flex-col h-full border-0 lg:border border-border bg-transparent lg:bg-card shadow-none lg:shadow-xl justify-between px-2 sm:px-6 pt-5 pb-1 sm:pt-6 sm:pb-1.5">
+    <Card className="flex flex-col h-full border-0 lg:border border-border bg-transparent lg:bg-card shadow-none lg:shadow-xl dark:lg:shadow-[0_20px_50px_rgba(0,0,0,0.7)] dark:border-border/80 justify-between px-2 sm:px-6 pt-5 pb-1 sm:pt-6 sm:pb-1.5">
       <CardHeader className="flex flex-row items-center justify-between gap-3 p-0 pb-3 shrink-0">
         <div className="space-y-0.5 min-w-0 pr-1">
           <CardTitle className="text-base sm:text-lg font-bold tracking-tight truncate">Tarefas de Estudo</CardTitle>
@@ -84,7 +84,7 @@ export function TaskPanel({
             </Button>
           </div>
         ) : (
-          <ul className="space-y-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-0.5 custom-scrollbar max-h-[60vh] lg:max-h-[550px]">
+          <ul className="space-y-2.5 flex-1 min-h-0 overflow-y-auto pr-1.5 pb-2 custom-scrollbar max-h-[60vh] lg:max-h-[500px]">
             {sortedTasks.map((task) => (
               <TaskItem
                 key={task.id}
