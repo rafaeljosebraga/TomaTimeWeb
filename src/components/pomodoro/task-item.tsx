@@ -6,9 +6,7 @@ import {
   Trash2,
   CheckCircle2,
   RotateCcw,
-  Flag,
   CircleDot,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,27 +31,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  TASK_PRIORITIES,
-  TASK_STATES,
   type Task,
   type TaskPriority,
   type TaskState,
 } from "@/types/domain";
 import { PriorityBadge, StatusBadge } from "./badges";
-
-const STATE_DISPLAY_LABELS: Record<TaskState, string> = {
-  backlog: "Backlog",
-  "a fazer": "A Fazer",
-  "em execução": "Em Execução",
-  "concluída": "Concluída",
-  "cancelada": "Cancelada",
-};
-
-const PRIORITY_DISPLAY_LABELS: Record<TaskPriority, string> = {
-  baixa: "Baixa",
-  média: "Média",
-  alta: "Alta",
-};
+import {
+  PRIORITY_DISPLAY_LABELS,
+  STATE_DISPLAY_LABELS,
+  TaskPrioritySelector,
+  TaskStateSelector,
+} from "./task-form-controls";
 
 interface TaskItemProps {
   task: Task;
@@ -187,58 +175,16 @@ export function TaskItem({
               </div>
 
               {/* Seletor de Estado em Pills/Grid */}
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Estado
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {TASK_STATES.map((s) => {
-                    const isSelected = stateDraft === s;
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setStateDraft(s)}
-                        className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-all ${
-                          isSelected
-                            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs"
-                            : "bg-muted/70 text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        <span className="capitalize">{STATE_DISPLAY_LABELS[s]}</span>
-                        {isSelected && <Check className="size-3.5 stroke-[2.5]" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <TaskStateSelector
+                value={stateDraft}
+                onChange={setStateDraft}
+              />
 
               {/* Seletor de Prioridade em Pills */}
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Prioridade
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  {TASK_PRIORITIES.map((p) => {
-                    const isSelected = priorityDraft === p;
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setPriorityDraft(p)}
-                        className={`flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium transition-all ${
-                          isSelected
-                            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs"
-                            : "bg-muted/70 text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        <Flag className="size-3" />
-                        <span>{PRIORITY_DISPLAY_LABELS[p]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <TaskPrioritySelector
+                value={priorityDraft}
+                onChange={setPriorityDraft}
+              />
 
               {/* Ações Rápidas */}
               <div className="space-y-1.5 border-t border-border/70 pt-3">

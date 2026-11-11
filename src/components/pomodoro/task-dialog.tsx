@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Check, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,31 +12,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  TASK_PRIORITIES,
-  TASK_STATES,
   type TaskPriority,
   type TaskState,
   type TaskValidationErrors,
 } from "@/types/domain";
+import {
+  TaskPrioritySelector,
+  TaskStateSelector,
+} from "./task-form-controls";
 
 type TaskFormData = {
   title: string;
   state: TaskState;
   priority: TaskPriority;
-};
-
-const STATE_DISPLAY_LABELS: Record<TaskState, string> = {
-  backlog: "Backlog",
-  "a fazer": "A Fazer",
-  "em execução": "Em Execução",
-  "concluída": "Concluída",
-  "cancelada": "Cancelada",
-};
-
-const PRIORITY_DISPLAY_LABELS: Record<TaskPriority, string> = {
-  baixa: "Baixa",
-  média: "Média",
-  alta: "Alta",
 };
 
 interface TaskDialogProps {
@@ -102,69 +89,19 @@ export function TaskDialog({
             )}
           </div>
 
-          {/* Seletor de Estado em Pills Modernas */}
-          <div className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Estado
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {TASK_STATES.map((s) => {
-                const isSelected = formData.state === s;
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => onFormDataChange({ ...formData, state: s })}
-                    className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-all ${
-                      isSelected
-                        ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs"
-                        : "bg-muted/70 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <span className="capitalize">{STATE_DISPLAY_LABELS[s]}</span>
-                    {isSelected && <Check className="size-3.5 stroke-[2.5]" />}
-                  </button>
-                );
-              })}
-            </div>
-            {formErrors.state && (
-              <p role="alert" className="text-xs text-destructive">
-                {formErrors.state.join(" ")}
-              </p>
-            )}
-          </div>
+          {/* Seletor de Estado em Pills */}
+          <TaskStateSelector
+            value={formData.state}
+            onChange={(s) => onFormDataChange({ ...formData, state: s })}
+            error={formErrors.state}
+          />
 
-          {/* Seletor de Prioridade em Pills Modernas */}
-          <div className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Prioridade
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              {TASK_PRIORITIES.map((p) => {
-                const isSelected = formData.priority === p;
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => onFormDataChange({ ...formData, priority: p })}
-                    className={`flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium transition-all ${
-                      isSelected
-                        ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs"
-                        : "bg-muted/70 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Flag className="size-3" />
-                    <span>{PRIORITY_DISPLAY_LABELS[p]}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {formErrors.priority && (
-              <p role="alert" className="text-xs text-destructive">
-                {formErrors.priority.join(" ")}
-              </p>
-            )}
-          </div>
+          {/* Seletor de Prioridade em Pills */}
+          <TaskPrioritySelector
+            value={formData.priority}
+            onChange={(p) => onFormDataChange({ ...formData, priority: p })}
+            error={formErrors.priority}
+          />
 
           <DialogFooter className="pt-3 gap-2 flex-col sm:flex-row-reverse sm:justify-start">
             <Button
