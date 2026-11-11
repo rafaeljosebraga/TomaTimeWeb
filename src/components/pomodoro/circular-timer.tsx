@@ -19,21 +19,21 @@ const STAGE_CONFIG: Record<
 > = {
   TF: {
     name: "Foco",
-    ring: "text-emerald-500",
+    ring: "stroke-emerald-500 text-emerald-500",
     pill: "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-500/25 dark:text-emerald-300",
     dot: "bg-emerald-500",
     text: "text-emerald-600 dark:text-emerald-400",
   },
   TPC: {
     name: "Pausa Curta",
-    ring: "text-amber-500",
+    ring: "stroke-amber-500 text-amber-500",
     pill: "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-500/25 dark:text-amber-300",
     dot: "bg-amber-500",
     text: "text-amber-600 dark:text-amber-400",
   },
   TPL: {
     name: "Pausa Longa",
-    ring: "text-rose-500",
+    ring: "stroke-rose-500 text-rose-500",
     pill: "bg-rose-500/10 text-rose-700 ring-1 ring-inset ring-rose-500/25 dark:text-rose-300",
     dot: "bg-rose-500",
     text: "text-rose-600 dark:text-rose-400",
@@ -51,7 +51,8 @@ export function CircularTimer({
 }: CircularTimerProps) {
   const cfg = STAGE_CONFIG[stage] ?? STAGE_CONFIG.TF;
   const isRunning = phase === "running";
-  const offset = CIRCUMFERENCE * (1 - Math.min(1, Math.max(0, progress)));
+  const clampedProgress = Math.min(1, Math.max(0, progress));
+  const offset = CIRCUMFERENCE * (1 - clampedProgress);
 
   return (
     <div
@@ -62,24 +63,32 @@ export function CircularTimer({
       className="relative mx-auto size-56 sm:size-64 md:size-72 shrink-0"
     >
       <svg viewBox="0 0 240 240" className="size-full -rotate-90">
+        {/* Circunferência base inativa (trilho sutil) */}
         <circle
           cx="120"
           cy="120"
           r={RADIUS}
           fill="none"
-          strokeWidth="12"
-          className="stroke-muted"
+          strokeWidth="10"
+          className="stroke-muted/40 dark:stroke-muted/60"
         />
+        {/* Linha de progresso proporcional que vai sendo preenchida até fechar o círculo */}
         <circle
           cx="120"
           cy="120"
           r={RADIUS}
           fill="none"
-          strokeWidth="12"
+          stroke="currentColor"
+          strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={CIRCUMFERENCE}
           strokeDashoffset={offset}
-          className={`${cfg.ring} transition-[stroke-dashoffset] duration-500 ease-linear`}
+          style={{
+            opacity: clampedProgress > 0 ? 1 : 0,
+          }}
+          className={`${cfg.ring} transition-[stroke-dashoffset,opacity] ${
+            isRunning ? "duration-1000 ease-linear" : "duration-300 ease-out"
+          }`}
         />
       </svg>
 
