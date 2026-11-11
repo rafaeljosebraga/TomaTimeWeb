@@ -167,7 +167,7 @@ export function TaskItem({
 
         <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
           <DialogContent
-            className="p-6 gap-5 sm:max-w-md"
+            className="sm:max-w-md"
             onOpenAutoFocus={(e) => e.preventDefault()}
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}

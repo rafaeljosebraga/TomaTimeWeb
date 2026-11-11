@@ -64,7 +64,7 @@ export function TaskDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-md p-6 gap-5"
+        className="sm:max-w-md"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}

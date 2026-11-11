@@ -35,7 +35,7 @@ export function ConfirmDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
-        className="sm:max-w-md p-6 gap-5"
+        className="sm:max-w-md"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
