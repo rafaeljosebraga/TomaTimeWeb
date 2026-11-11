@@ -11,21 +11,22 @@ const STATE_LABELS: Record<TaskState, string> = {
 };
 
 const STATE_CLASSES: Record<TaskState, string> = {
-  backlog: "border-border text-muted-foreground bg-muted/30",
+  backlog:
+    "border-neutral-300 bg-neutral-200/60 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-200",
   "a fazer":
-    "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300 dark:bg-amber-500/20",
   "em execução":
-    "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+    "border-emerald-500/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 dark:bg-emerald-500/20",
   "concluída":
-    "border-zinc-800 bg-zinc-800 text-zinc-50 dark:border-zinc-200 dark:bg-zinc-200 dark:text-zinc-900",
+    "border-neutral-800 bg-neutral-800 text-white dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900 font-semibold",
   "cancelada":
-    "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400 line-through opacity-80",
+    "border-red-500/40 bg-red-500/15 text-red-800 dark:text-red-300 line-through opacity-85",
 };
 
 const STATE_DOT: Record<TaskState, string> = {
-  backlog: "bg-zinc-400",
-  "a fazer": "bg-amber-500",
-  "em execução": "bg-emerald-500",
+  backlog: "bg-neutral-500 dark:bg-neutral-400",
+  "a fazer": "bg-amber-600 dark:bg-amber-400",
+  "em execução": "bg-emerald-600 dark:bg-emerald-400",
   "concluída": "",
   "cancelada": "",
 };
@@ -66,10 +67,11 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 };
 
 const PRIORITY_CLASSES: Record<TaskPriority, string> = {
-  alta: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
+  alta: "border-red-500/40 bg-red-500/15 text-red-700 dark:text-red-300 dark:bg-red-500/20 font-semibold",
   média:
-    "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  baixa: "border-border text-muted-foreground bg-muted/20",
+    "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300 dark:bg-amber-500/20 font-semibold",
+  baixa:
+    "border-neutral-300 bg-neutral-200/60 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-300",
 };
 
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {

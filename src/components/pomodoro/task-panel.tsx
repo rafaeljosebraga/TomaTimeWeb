@@ -22,6 +22,7 @@ interface TaskPanelProps {
   onRequestDeleteTask: (task: Task) => void;
   onQuickChangeState: (id: string, state: TaskState) => void;
   onQuickChangePriority: (id: string, priority: TaskPriority) => void;
+  onClose?: () => void;
 }
 
 export function TaskPanel({
@@ -31,6 +32,7 @@ export function TaskPanel({
   onRequestDeleteTask,
   onQuickChangeState,
   onQuickChangePriority,
+  onClose,
 }: TaskPanelProps) {
   const pendingCount = tasks.filter(
     (t) => t.state !== "concluída" && t.state !== "cancelada"
@@ -39,30 +41,32 @@ export function TaskPanel({
   const sortedTasks = sortTasks(tasks);
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 pb-4">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-semibold">Tarefas de Estudo</CardTitle>
-          <CardDescription className="text-xs">
+    <Card className="flex flex-col h-full border-0 lg:border border-border bg-transparent lg:bg-card shadow-none lg:shadow-xl justify-between px-2 sm:px-6 pt-5 pb-1 sm:pt-6 sm:pb-1.5">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 p-0 pb-3 shrink-0">
+        <div className="space-y-0.5 min-w-0 pr-1">
+          <CardTitle className="text-base sm:text-lg font-bold tracking-tight truncate">Tarefas de Estudo</CardTitle>
+          <CardDescription className="text-xs truncate">
             {tasks.length === 0
               ? "Organize o que você precisa estudar"
               : `${pendingCount} pendente${pendingCount === 1 ? "" : "s"} · ${doneCount} concluída${doneCount === 1 ? "" : "s"}`}
           </CardDescription>
         </div>
 
-        <Button
-          size="sm"
-          className="h-9 gap-1.5 shrink-0"
-          onClick={onOpenCreateDialog}
-        >
-          <Plus className="size-4" />
-          <span>Nova Tarefa</span>
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 px-3.5 text-xs font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-sm"
+            onClick={onOpenCreateDialog}
+          >
+            <Plus className="size-4" />
+            <span>Nova Tarefa</span>
+          </Button>
+        </div>
       </CardHeader>
 
-      <CardContent className="flex-1 pt-0">
+      <CardContent className="flex-1 min-h-0 flex flex-col p-0 pb-0">
         {tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2.5 rounded-xl border border-dashed border-border px-6 py-12 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-border px-6 py-12 text-center bg-card/40">
             <ClipboardList className="size-8 text-muted-foreground/50" aria-hidden />
             <p className="text-sm font-medium">Nenhuma tarefa ainda</p>
             <p className="max-w-64 text-xs text-muted-foreground">
@@ -71,14 +75,14 @@ export function TaskPanel({
             <Button
               variant="outline"
               size="sm"
-              className="mt-2 text-xs"
+              className="mt-2 text-xs rounded-full"
               onClick={onOpenCreateDialog}
             >
               <Plus className="size-3.5" /> Adicionar tarefa
             </Button>
           </div>
         ) : (
-          <ul className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1 custom-scrollbar">
+          <ul className="space-y-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-0.5 custom-scrollbar max-h-[60vh] lg:max-h-[550px]">
             {sortedTasks.map((task) => (
               <TaskItem
                 key={task.id}
