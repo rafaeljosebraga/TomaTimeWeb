@@ -1,3 +1,5 @@
+import { RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { SessionPhase, SessionStage } from "@/types/domain";
 
 const RADIUS = 104;
@@ -11,6 +13,7 @@ interface CircularTimerProps {
   progress: number;
   completedCycles: number;
   cyclesBeforeLongBreak: number;
+  onReset?: () => void;
 }
 
 const STAGE_CONFIG: Record<
@@ -48,6 +51,7 @@ export function CircularTimer({
   progress,
   completedCycles,
   cyclesBeforeLongBreak,
+  onReset,
 }: CircularTimerProps) {
   const cfg = STAGE_CONFIG[stage] ?? STAGE_CONFIG.TF;
   const isRunning = phase === "running";
@@ -115,24 +119,19 @@ export function CircularTimer({
           {formattedTime}
         </p>
 
-        {/* Indicador de ciclos concluídos */}
-        <div
-          aria-hidden
-          className="flex items-center gap-1.5"
-          title={`${completedCycles} de ${cyclesBeforeLongBreak} ciclos concluídos`}
-        >
-          {Array.from({ length: Math.max(cyclesBeforeLongBreak, 1) }).map((_, i) => (
-            <span
-              key={i}
-              className={`size-2 rounded-full transition-colors ${
-                i < (completedCycles % cyclesBeforeLongBreak) ||
-                (completedCycles > 0 && completedCycles % cyclesBeforeLongBreak === 0)
-                  ? STAGE_CONFIG.TF.dot
-                  : "bg-muted-foreground/25"
-              }`}
-            />
-          ))}
-        </div>
+        {/* Botão de Zerar Fase no lugar dos indicadores de ciclo */}
+        {onReset && (
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors cursor-pointer disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shrink-0 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent h-10 rounded-full px-2.5 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground"
+            onClick={onReset}
+            aria-label="Reiniciar tempo da fase atual"
+            title="Zerar Fase"
+          >
+            <RotateCcw className="size-4 sm:mr-1" />
+            <span className="hidden sm:inline">Zerar</span>
+          </button>
+        )}
       </div>
     </div>
   );
