@@ -53,6 +53,7 @@ import { TaskDialog } from "@/components/pomodoro/task-dialog";
 import { DeleteDialog } from "@/components/pomodoro/delete-dialog";
 import { ConfirmDialog, type ConfirmAction } from "@/components/pomodoro/confirm-dialog";
 import { QuickActionSidebar } from "@/components/pomodoro/quick-action-sidebar";
+import { BottomControlBar } from "@/components/pomodoro/bottom-control-bar";
 
 type PendingDelete = {
   type: "preset" | "task";
@@ -545,7 +546,7 @@ export function App() {
         )}
 
         {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 sm:pb-32 lg:py-10 lg:pb-32">
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
@@ -597,6 +598,18 @@ export function App() {
               onQuickChangePriority={handleQuickChangeTaskPriority}
             />
           </div>
+
+          {/* Barra Flutuante de Controles Abaixo do Card, Centralizada na Página */}
+          <BottomControlBar
+            timer={timer}
+            onStart={handleStart}
+            onPause={handlePause}
+            onResume={handleResume}
+            onReset={handleReset}
+            onResetCycles={handleResetCycles}
+            onSkipStage={handleSkipStage}
+            onEndSession={handleEndSession}
+          />
         </main>
 
         {/* Rodapé da Aplicação */}
