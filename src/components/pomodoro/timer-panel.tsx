@@ -145,14 +145,6 @@ export function TimerPanel({
         <div className="flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
           <p className="flex items-center gap-1.5 font-medium text-foreground">
             <span>Ciclos de foco concluídos: {timer.completedCycles}</span>
-            <button
-              type="button"
-              onClick={onResetCycles}
-              className="text-xs text-muted-foreground underline hover:text-foreground cursor-pointer ml-1"
-              title="Zerar a contagem de ciclos concluídos"
-            >
-              (Zerar)
-            </button>
           </p>
           <p>{getLongBreakStatusMessage(timer)}</p>
           {timer.endsAt && timer.phase === "running" && (
