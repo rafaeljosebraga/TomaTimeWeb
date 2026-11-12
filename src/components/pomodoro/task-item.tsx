@@ -1,6 +1,21 @@
-import { Edit2, MoreVertical, Trash2, CheckCircle2, RotateCcw } from "lucide-react";
+import * as React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import {
+  Edit2,
+  MoreVertical,
+  Trash2,
+  CheckCircle2,
+  RotateCcw,
+  CircleDot,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,28 +29,19 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
-  TASK_PRIORITIES,
-  TASK_STATES,
   type Task,
   type TaskPriority,
   type TaskState,
 } from "@/types/domain";
 import { PriorityBadge, StatusBadge } from "./badges";
-
-const STATE_DISPLAY_LABELS: Record<TaskState, string> = {
-  backlog: "Backlog",
-  "a fazer": "A Fazer",
-  "em execução": "Em Execução",
-  "concluída": "Concluída",
-  "cancelada": "Cancelada",
-};
-
-const PRIORITY_DISPLAY_LABELS: Record<TaskPriority, string> = {
-  baixa: "Baixa",
-  média: "Média",
-  alta: "Alta",
-};
+import {
+  PRIORITY_DISPLAY_LABELS,
+  STATE_DISPLAY_LABELS,
+  TaskPrioritySelector,
+  TaskStateSelector,
+} from "./task-form-controls";
 
 interface TaskItemProps {
   task: Task;
@@ -43,6 +49,7 @@ interface TaskItemProps {
   onRequestDeleteTask: (task: Task) => void;
   onQuickChangeState: (id: string, state: TaskState) => void;
   onQuickChangePriority: (id: string, priority: TaskPriority) => void;
+  onUpdateTitle?: (id: string, title: string) => void;
 }
 
 export function TaskItem({
@@ -51,21 +58,55 @@ export function TaskItem({
   onRequestDeleteTask,
   onQuickChangeState,
   onQuickChangePriority,
+  onUpdateTitle,
 }: TaskItemProps) {
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = React.useState(false);
+  const [titleDraft, setTitleDraft] = React.useState(task.title);
+  const [stateDraft, setStateDraft] = React.useState<TaskState>(task.state);
+  const [priorityDraft, setPriorityDraft] = React.useState<TaskPriority>(task.priority);
   const isDone = task.state === "concluída";
+
+  // Sincroniza os estados quando a tarefa externa mudar ou o modal abrir
+  React.useEffect(() => {
+    setTitleDraft(task.title);
+    setStateDraft(task.state);
+    setPriorityDraft(task.priority);
+  }, [task.title, task.state, task.priority, isMobileSheetOpen]);
+
+  const handleSaveChanges = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanTitle = titleDraft.trim();
+    if (cleanTitle && cleanTitle.length <= 100 && cleanTitle !== task.title) {
+      if (onUpdateTitle) {
+        onUpdateTitle(task.id, cleanTitle);
+      }
+    }
+    if (stateDraft !== task.state) {
+      onQuickChangeState(task.id, stateDraft);
+    }
+    if (priorityDraft !== task.priority) {
+      onQuickChangePriority(task.id, priorityDraft);
+    }
+    setIsMobileSheetOpen(false);
+  };
 
   const handleToggleCompleted = () => {
     onQuickChangeState(task.id, isDone ? "a fazer" : "concluída");
+  };
+
+  const handleMobileAction = (action: () => void) => {
+    setIsMobileSheetOpen(false);
+    action();
   };
 
   return (
     <li
       className={`group flex items-start gap-3 rounded-2xl border p-4 transition-colors ${
         task.state === "em execução"
-          ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm"
+          ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm dark:bg-emerald-950/20 dark:border-emerald-500/40"
           : isDone
-          ? "border-border/70 bg-neutral-100/80 text-muted-foreground dark:bg-neutral-900/60 dark:border-neutral-800 opacity-80"
-          : "border-border/80 bg-neutral-50/90 hover:bg-neutral-100/90 dark:bg-neutral-900/90 dark:hover:bg-neutral-900 dark:border-neutral-800 text-foreground"
+          ? "border-border/70 bg-neutral-100/80 text-muted-foreground dark:bg-neutral-900/60 dark:border-neutral-800/80 opacity-75"
+          : "border-border/80 bg-neutral-50/90 hover:bg-neutral-100/90 dark:bg-neutral-900/90 dark:hover:bg-neutral-850 dark:border-neutral-800 dark:hover:border-neutral-700 text-foreground"
       }`}
     >
       <Checkbox
@@ -102,76 +143,107 @@ export function TaskItem({
       </div>
 
       <div className="flex items-center gap-0.5 shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-neutral-200/60 dark:hover:bg-neutral-800"
-              aria-label={`Ações para tarefa ${task.title}`}
-            >
-              <MoreVertical className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Alterar Estado</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={task.state}
-              onValueChange={(val) =>
-                onQuickChangeState(task.id, val as TaskState)
-              }
-            >
-              {TASK_STATES.map((s) => (
-                <DropdownMenuRadioItem key={s} value={s}>
-                  {STATE_DISPLAY_LABELS[s]}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-neutral-200/60 dark:hover:bg-neutral-800"
+          aria-label={`Ações para tarefa ${task.title}`}
+          onClick={() => setIsMobileSheetOpen(true)}
+        >
+          <MoreVertical className="size-4" />
+        </Button>
 
-            <DropdownMenuSeparator />
+        <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+          <DialogContent
+            className="sm:max-w-md"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <form onSubmit={handleSaveChanges} className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Título da tarefa
+                </span>
+                <Input
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  maxLength={100}
+                  placeholder="Nome da tarefa..."
+                  className="h-11 rounded-xl bg-muted/40 font-medium text-base text-foreground focus-visible:ring-1 focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-600"
+                />
+              </div>
 
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Prioridade</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup
-                  value={task.priority}
-                  onValueChange={(val) =>
-                    onQuickChangePriority(task.id, val as TaskPriority)
-                  }
+              {/* Seletor de Estado em Pills/Grid */}
+              <TaskStateSelector
+                value={stateDraft}
+                onChange={setStateDraft}
+              />
+
+              {/* Seletor de Prioridade em Pills */}
+              <TaskPrioritySelector
+                value={priorityDraft}
+                onChange={setPriorityDraft}
+              />
+
+              {/* Ações Rápidas */}
+              <div className="space-y-1.5 border-t border-border/70 pt-3">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full justify-start rounded-xl text-sm font-medium h-10 gap-2.5"
+                  onClick={() => onRequestDeleteTask(task)}
                 >
-                  {TASK_PRIORITIES.map((p) => (
-                    <DropdownMenuRadioItem key={p} value={p}>
-                      {PRIORITY_DISPLAY_LABELS[p]}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+                  <Trash2 className="size-4" /> Excluir tarefa
+                </Button>
 
-            <DropdownMenuSeparator />
+                {isDone ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-start rounded-xl text-sm font-medium h-10 gap-2.5"
+                    onClick={() =>
+                      handleMobileAction(() => onQuickChangeState(task.id, "a fazer"))
+                    }
+                  >
+                    <RotateCcw className="size-4" /> Reabrir tarefa
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-start rounded-xl text-sm font-medium h-10 gap-2.5"
+                    onClick={() =>
+                      handleMobileAction(() => onQuickChangeState(task.id, "concluída"))
+                    }
+                  >
+                    <CheckCircle2 className="size-4 text-emerald-500" /> Marcar como concluída
+                  </Button>
+                )}
+              </div>
 
-            {isDone ? (
-              <DropdownMenuItem onClick={() => onQuickChangeState(task.id, "a fazer")}>
-                <RotateCcw className="size-4" /> Reabrir tarefa
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => onQuickChangeState(task.id, "concluída")}>
-                <CheckCircle2 className="size-4" /> Marcar como concluída
-              </DropdownMenuItem>
-            )}
-
-            <DropdownMenuItem onClick={() => onEditTask(task)}>
-              <Edit2 className="size-4" /> Editar tarefa
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => onRequestDeleteTask(task)}
-            >
-              <Trash2 className="size-4" /> Excluir tarefa
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {/* Botão de Salvar Alterações Fixo e Sempre Presente */}
+              <div className="pt-2 flex flex-col sm:flex-row-reverse sm:justify-start gap-2">
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto flex-1 justify-center gap-2 whitespace-nowrap text-sm transition-colors cursor-pointer disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shrink-0 h-11 rounded-full font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-md"
+                >
+                  Salvar Alterações
+                </Button>
+                <DialogPrimitive.Close asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto h-11 rounded-full font-medium"
+                    onClick={() => setIsMobileSheetOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                </DialogPrimitive.Close>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </li>
   );

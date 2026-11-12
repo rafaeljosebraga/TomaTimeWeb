@@ -7,6 +7,12 @@
 // TPL: Tempo de Pausa Longa
 export type SessionStage = "TF" | "TPC" | "TPL";
 
+export const STAGE_DISPLAY_NAMES: Record<SessionStage, string> = {
+  TF: "Tempo de Foco",
+  TPC: "Pausa Curta",
+  TPL: "Pausa Longa",
+};
+
 // Fases de execução da sessão
 export type SessionPhase = "idle" | "running" | "paused" | "completed";
 

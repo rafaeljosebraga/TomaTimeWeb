@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { TomatimerIcon } from "@/components/icons/tomatimer-icon";
 import { primeAudioContext, playPhaseEndAlert } from "@/lib/audio/sound-alert";
 import {
+  STAGE_DISPLAY_NAMES,
   type PresetValidationErrors,
+  type SessionStage,
   type SessionTimer,
   type Task,
   type TaskPriority,
@@ -89,10 +91,10 @@ const INITIAL_TASK_FORM: TaskFormData = {
   priority: "média",
 };
 
-const STAGE_LABELS: Record<string, string> = {
-  TF: "Tempo de Foco (TF)",
-  TPC: "Tempo de Pausa Curta (TPC)",
-  TPL: "Tempo de Pausa Longa (TPL)",
+const STAGE_LABELS: Record<SessionStage, string> = {
+  TF: `${STAGE_DISPLAY_NAMES.TF} (TF)`,
+  TPC: `${STAGE_DISPLAY_NAMES.TPC} (TPC)`,
+  TPL: `${STAGE_DISPLAY_NAMES.TPL} (TPL)`,
 };
 
 export function App() {
@@ -466,24 +468,38 @@ export function App() {
     }
   }
 
+  function handleSaveTaskTitle(id: string, newTitle: string) {
+    const result = updateTask(id, { title: newTitle });
+    if (result.isValid) {
+      setTasks(loadTasks());
+      setGlobalMessage("Tarefa atualizada com sucesso.");
+    }
+  }
+
   return (
     <ThemeProvider defaultTheme="system">
-      <div className="flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200">
+      <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200 selection:bg-primary/20">
+        {/* Textura sutil de fundo radial no centro da tela */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(120,119,198,0.06),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(255,255,255,0.04),transparent)]"
+        />
+
         {/* Cabeçalho da Aplicação */}
-        <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-2.5">
-              <TomatimerIcon className="size-7 sm:size-8 shrink-0 text-foreground" aria-hidden />
-              <div className="leading-tight">
-                <p className="text-sm font-semibold tracking-tight">Tomatimer</p>
-                <p className="hidden text-xs text-muted-foreground sm:block">
-                  Temporizador Pomodoro para estudos
-                </p>
-              </div>
+        <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Fio de gradiente decorativo na borda inferior */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent pointer-events-none" />
+          <div className="mx-auto flex h-12 sm:h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* Ícone restaurado para cor neutra (preto / foreground) */}
+              <TomatimerIcon
+                className="size-6 sm:size-7 shrink-0 text-foreground transition-colors"
+                aria-hidden
+              />
+              <p className="text-sm font-bold tracking-tight">Tomatimer</p>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* No mobile o ThemeToggle fica antes do menu ... */}
               <div className="hidden sm:block">
                 <ThemeToggle />
               </div>
@@ -491,8 +507,8 @@ export function App() {
           </div>
         </header>
 
-        {/* Área Principal Responsiva: Temporizador na Esquerda, Tarefas na Direita (Abaixo em Mobile) */}
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 sm:pb-32 lg:py-10 lg:pb-32">
+        {/* Área Principal Responsiva: Centralizada Perfeitamente na Vertical e Horizontal sem scroll */}
+        <main className="mx-auto w-full max-w-6xl flex-1 flex flex-col justify-center px-3 py-3 pb-24 sm:px-6 sm:py-3 sm:pb-24 lg:py-4 lg:pb-24 overflow-x-hidden">
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
@@ -513,7 +529,7 @@ export function App() {
           {/* Layout Principal com Transição do Painel de Tarefas */}
           <div className="flex flex-col lg:flex-row items-stretch justify-center gap-6">
             {/* Coluna 1: Painel do Temporizador Central */}
-            <div className={`w-full transition-all duration-300 ease-in-out flex flex-col ${isTasksPanelOpen ? "lg:max-w-2xl" : "max-w-3xl mx-auto"}`}>
+            <div className={`w-full transition-all duration-300 ease-in-out flex flex-col ${isTasksPanelOpen ? "lg:max-w-xl xl:max-w-2xl" : "max-w-3xl lg:max-w-4xl mx-auto"}`}>
               <TimerPanel
                 timer={timer}
                 presets={presets}
@@ -537,22 +553,27 @@ export function App() {
               />
             </div>
 
-            {/* Coluna 2 (Desktop): Painel de Tarefas Deslizando da Direita para a Esquerda */}
-            {isTasksPanelOpen && (
-              <div className="hidden lg:flex flex-col shrink-0 w-[440px] animate-in fade-in slide-in-from-right duration-300">
-                <div className="w-[440px] h-full flex flex-col">
-                  <TaskPanel
-                    tasks={tasks}
-                    onOpenCreateDialog={handleOpenCreateTaskDialog}
-                    onEditTask={handleEditTask}
-                    onRequestDeleteTask={handleRequestDeleteTask}
-                    onQuickChangeState={handleQuickChangeTaskState}
-                    onQuickChangePriority={handleQuickChangeTaskPriority}
-                    onClose={() => setIsTasksPanelOpen(false)}
-                  />
-                </div>
+            {/* Coluna 2 (Desktop): Painel de Tarefas Deslizando da Direita para a Esquerda e Recolhendo Suavemente */}
+            <div
+              className={`hidden lg:flex flex-col shrink-0 transition-all duration-300 ease-in-out ${
+                isTasksPanelOpen
+                  ? "w-[400px] xl:w-[440px] opacity-100"
+                  : "w-0 opacity-0 pointer-events-none overflow-hidden"
+              }`}
+            >
+              <div className="w-[400px] xl:w-[440px] h-full flex flex-col">
+                <TaskPanel
+                  tasks={tasks}
+                  onOpenCreateDialog={handleOpenCreateTaskDialog}
+                  onEditTask={handleEditTask}
+                  onRequestDeleteTask={handleRequestDeleteTask}
+                  onQuickChangeState={handleQuickChangeTaskState}
+                  onQuickChangePriority={handleQuickChangeTaskPriority}
+                  onUpdateTaskTitle={handleSaveTaskTitle}
+                  onClose={() => setIsTasksPanelOpen(false)}
+                />
               </div>
-            )}
+            </div>
           </div>
 
           {/* Drawer / Bottom Sheet Mobile: Tarefas surgindo de Baixo para Cima sobrepondo a tela (renderizado exclusivamente em telas menores que lg) */}
@@ -583,21 +604,13 @@ export function App() {
               className="relative z-10 w-full max-h-[88vh] rounded-t-3xl border-t border-border bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 px-4 pt-3 pb-6 shadow-2xl flex flex-col overflow-hidden will-change-transform"
             >
               {/* Alça visual de arrasto no topo: clique fecha, arrastar para baixo fecha */}
-              <div
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
                 aria-label="Puxador: arraste para baixo ou clique para fechar tarefas"
                 title="Fechar tarefas"
                 onClick={() => {
                   setDragOffsetY(0);
                   setIsTasksPanelOpen(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setDragOffsetY(0);
-                    setIsTasksPanelOpen(false);
-                  }
                 }}
                 onTouchStart={(e) => {
                   const touch = e.touches[0];
@@ -650,10 +663,10 @@ export function App() {
                   window.addEventListener("mousemove", handleMouseMove);
                   window.addEventListener("mouseup", handleMouseUp);
                 }}
-                className="mx-auto -mt-1 mb-2.5 flex h-6 w-full items-center justify-center cursor-pointer touch-none select-none group"
+                className="mx-auto -mt-1 mb-2.5 flex h-6 w-full items-center justify-center cursor-pointer touch-none select-none group border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
-              </div>
+                <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all group-hover:bg-muted-foreground/60 group-hover:w-14" />
+              </button>
 
               <div className="overflow-y-auto flex-1 pr-1 custom-scrollbar">
                 <TaskPanel
@@ -663,6 +676,7 @@ export function App() {
                   onRequestDeleteTask={handleRequestDeleteTask}
                   onQuickChangeState={handleQuickChangeTaskState}
                   onQuickChangePriority={handleQuickChangeTaskPriority}
+                  onUpdateTaskTitle={handleSaveTaskTitle}
                   onClose={() => {
                     setDragOffsetY(0);
                     setIsTasksPanelOpen(false);
@@ -688,14 +702,14 @@ export function App() {
         </main>
 
         {/* Rodapé da Aplicação */}
-        <footer className="mt-auto border-t border-border bg-background">
+        {/* <footer className="mt-auto border-t border-border bg-background">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6">
             <p>
               Técnica Pomodoro: blocos de foco intercalados com pausas curtas e uma pausa longa a cada ciclo.
             </p>
             <p>Seus dados ficam salvos exclusivamente neste navegador via localStorage.</p>
           </div>
-        </footer>
+        </footer> */}
 
         {/* Modal de Formulário de Tarefas */}
         <TaskDialog

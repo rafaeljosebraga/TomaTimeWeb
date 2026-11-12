@@ -20,14 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import type {
-  PresetValidationErrors,
-  SessionStage,
-  SessionTimer,
-  TimerPreset,
+import {
+  STAGE_DISPLAY_NAMES,
+  type PresetValidationErrors,
+  type SessionStage,
+  type SessionTimer,
+  type TimerPreset,
 } from "@/types/domain";
 import {
-  getLongBreakStatusMessage,
+  formatTime,
   getRemainingSeconds,
 } from "@/lib/domain/session-timer";
 import { CircularTimer } from "./circular-timer";
@@ -63,16 +64,10 @@ interface TimerPanelProps {
 }
 
 const STAGES: { stage: SessionStage; label: string }[] = [
-  { stage: "TF", label: "Tempo de Foco" },
-  { stage: "TPC", label: "Pausa Curta" },
-  { stage: "TPL", label: "Pausa Longa" },
+  { stage: "TF", label: STAGE_DISPLAY_NAMES.TF },
+  { stage: "TPC", label: STAGE_DISPLAY_NAMES.TPC },
+  { stage: "TPL", label: STAGE_DISPLAY_NAMES.TPL },
 ];
-
-function formatSeconds(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-}
 
 export function TimerPanel({
   timer,
@@ -96,18 +91,19 @@ export function TimerPanel({
   onRequestDeletePreset,
 }: TimerPanelProps) {
   const remainingSecs = getRemainingSeconds(timer);
-  const remainingFormatted = formatSeconds(remainingSecs);
+  const remainingFormatted = formatTime(remainingSecs);
   const totalDurationMs = timer.durationMs > 0 ? timer.durationMs : 1;
   const progress = 1 - timer.remainingMs / totalDurationMs;
+  const activePreset = presets.find((p) => p.id === activePresetId) ?? timer.preset;
 
   return (
-    <Card className="h-full gap-6 px-4 py-8 sm:px-8 flex flex-col justify-between shadow-xl">
+    <Card className="h-full gap-4 sm:gap-5 px-2 py-4 sm:px-8 sm:py-6 flex flex-col justify-between shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] dark:border-border/80">
       {/* Seletor visual de fases */}
-      <CardHeader className="flex flex-row justify-center px-0 pb-0 pt-0">
+      <CardHeader className="flex flex-row justify-center px-0 pb-0 pt-0 w-full overflow-hidden">
         <div
           role="tablist"
           aria-label="Fase do temporizador"
-          className="inline-flex max-w-full flex-wrap justify-center items-center gap-1 rounded-full bg-muted p-1"
+          className="flex w-auto max-w-full items-center gap-1 rounded-full border border-neutral-200/60 bg-neutral-100/90 p-1 dark:border-neutral-800 dark:bg-neutral-900/80 overflow-x-auto custom-scrollbar-h scroll-smooth"
         >
           {STAGES.map((s) => {
             const isCurrent = timer.stage === s.stage;
@@ -116,10 +112,10 @@ export function TimerPanel({
                 key={s.stage}
                 role="tab"
                 aria-selected={isCurrent}
-                className={`rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap shrink-0 rounded-full py-1 sm:py-1.5 px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
                   isCurrent
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground opacity-70"
+                    ? "bg-white text-neutral-900 shadow-xs dark:bg-neutral-800 dark:text-neutral-50 font-semibold"
+                    : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
                 }`}
               >
                 {s.label}
@@ -129,7 +125,7 @@ export function TimerPanel({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col items-center gap-7 px-0 pt-4">
+      <CardContent className="flex flex-col items-center gap-4 sm:gap-5 px-0 pt-0 sm:pt-1">
         {/* Temporizador Circular */}
         <CircularTimer
           stage={timer.stage}
@@ -139,62 +135,66 @@ export function TimerPanel({
           progress={progress}
           completedCycles={timer.completedCycles}
           cyclesBeforeLongBreak={timer.preset.cyclesBeforeLongBreak}
+          onReset={onReset}
         />
 
-        {/* Detalhes de status e ciclos */}
-        <div className="flex flex-col items-center gap-1 text-center text-xs text-muted-foreground">
-          <p className="flex items-center gap-1.5 font-medium text-foreground">
+        {/* Detalhes de status e ciclos (linha estática para não haver salto de layout) */}
+        <div className="flex min-h-6 flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 text-center text-xs sm:text-sm text-muted-foreground pb-1">
+          <p className="flex items-center gap-1 font-medium text-foreground text-[11px] sm:text-xs whitespace-nowrap">
             <span>Ciclos de foco concluídos: {timer.completedCycles}</span>
           </p>
-          <p>{getLongBreakStatusMessage(timer)}</p>
-          {timer.endsAt && timer.phase === "running" && (
-            <p className="text-[11px] opacity-80">
-              Fim previsto: {new Date(timer.endsAt).toLocaleTimeString()}
-            </p>
-          )}
+          <span className="text-muted-foreground/40 font-bold hidden sm:inline">·</span>
+          <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-neutral-200/80 bg-neutral-100 px-2 sm:px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-neutral-800 shadow-2xs dark:border-neutral-700/80 dark:bg-neutral-800 dark:text-neutral-100 transition-colors whitespace-nowrap">
+            <TimerIcon className="size-3 sm:size-3.5 text-neutral-600 dark:text-neutral-300" />
+            {timer.phase === "running" && timer.endsAt
+              ? `Fim às ${new Date(timer.endsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+              : timer.phase === "paused"
+              ? "Pausado"
+              : "Pronto"}
+          </span>
         </div>
 
-        <Separator className="w-full max-w-sm" />
+        <Separator className="w-full max-w-md" />
 
-        {/* Seletor de preset ativo e atalho para o Dialog */}
-        <div className="flex w-full max-w-sm flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2">
-            <TimerIcon className="size-4 text-muted-foreground" aria-hidden />
-            <span className="text-sm font-medium">Preset de estudo</span>
+        {/* Seletor de preset ativo com visual moderno em card pill */}
+        <div className="flex w-full max-w-md flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 rounded-2xl border border-neutral-200/80 bg-neutral-100/90 dark:border-neutral-800 dark:bg-neutral-900/90 p-2.5 sm:px-3.5 shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100">
+              <TimerIcon className="size-3.5 sm:size-4" aria-hidden />
+            </div>
+            <div className="flex flex-col text-left min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider">
+                Preset de estudo
+              </span>
+              <span className="text-[11px] sm:text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                {activePreset
+                  ? `${activePreset.focusMinutes}m · ${activePreset.shortBreakMinutes}m · ${activePreset.cyclesBeforeLongBreak} ciclos`
+                  : "Selecione o ritmo"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Select value={activePresetId} onValueChange={onSelectActivePreset}>
-              <SelectTrigger
-                className="h-9 w-40"
-                aria-label="Selecionar preset do timer"
-              >
-                <SelectValue placeholder="Escolha um preset" />
-              </SelectTrigger>
-              <SelectContent>
-                {presets.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    <div className="flex flex-col text-left">
-                      <span className="font-medium truncate">{p.name}</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {p.focusMinutes}m / {p.shortBreakMinutes}m · {p.cyclesBeforeLongBreak} ciclos
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={activePresetId} onValueChange={onSelectActivePreset}>
+            <SelectTrigger
+              className="h-8 sm:h-9 w-full sm:w-auto sm:min-w-32 sm:max-w-44 rounded-xl border border-neutral-300/80 bg-white dark:border-neutral-700/80 dark:bg-neutral-800 font-semibold text-xs text-neutral-900 dark:text-neutral-50 shadow-xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-colors shrink-0"
+              aria-label="Selecionar preset do timer"
+            >
+              <span className="truncate">{activePreset?.name ?? "Escolha um preset"}</span>
+            </SelectTrigger>
+            <SelectContent align="end" className="rounded-2xl border-border/80 p-1.5 shadow-xl">
+              {presets.map((p) => (
+                <SelectItem key={p.id} value={p.id} className="rounded-xl py-2">
+                  <div className="flex flex-col text-left gap-0.5">
+                    <span className="font-semibold text-xs text-foreground truncate">{p.name}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {p.focusMinutes}m foco · {p.shortBreakMinutes}m pausa · {p.cyclesBeforeLongBreak} ciclos
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        <p className="text-center text-xs text-muted-foreground">
-          Pressione{" "}
-          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
-            Espaço
-          </kbd>{" "}
-          para iniciar ou pausar · o ciclo reinicia após{" "}
-          {timer.preset.cyclesBeforeLongBreak} pomodoros
-        </p>
       </CardContent>
     </Card>
   );

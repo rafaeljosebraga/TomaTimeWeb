@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sliders, Plus, Edit2, Trash2, Check } from "lucide-react";
+import { Sliders, Plus, Pencil, Trash, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -74,40 +74,46 @@ export function PresetsDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Gerenciador de Presets</DialogTitle>
-          <DialogDescription>
+      <DialogContent>
+        <DialogHeader className="gap-1 text-left">
+          <DialogTitle className="text-lg font-bold text-foreground">
+            Gerenciador de Presets
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
             Crie, edite ou alterne entre seus temporizadores personalizados.
           </DialogDescription>
         </DialogHeader>
 
         {/* Lista de presets existentes */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold">Presets Salvos</h4>
-          <div className="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+        <div className="space-y-2.5">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Presets Salvos
+          </h4>
+          <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1.5 py-0.5">
             {presets.map((preset) => {
               const isActive = preset.id === activePresetId;
               const isBeingEdited = preset.id === editingId;
               return (
                 <div
                   key={preset.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border text-sm transition-colors ${
+                  className={`flex items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border text-sm transition-all ${
                     isActive
-                      ? "border-primary/50 bg-primary/5"
-                      : "border-border bg-card hover:bg-accent/40"
+                      ? "border-primary/50 bg-primary/5 dark:bg-primary/10 shadow-xs ring-1 ring-primary/20"
+                      : "border-border bg-card/60 hover:bg-muted/50"
                   }`}
                 >
-                  <div className="min-w-0 flex-1 pr-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{preset.name}</span>
+                  <div className="min-w-0 flex-1 pr-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-semibold text-foreground truncate break-words max-w-full">
+                        {preset.name}
+                      </span>
                       {isActive && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
                           <Check className="size-3" /> Ativo
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
                       Foco: {preset.focusMinutes}m · Pausa curta: {preset.shortBreakMinutes}m · Meta: {preset.cyclesBeforeLongBreak} ciclos · Pausa longa: {preset.longBreakMinutes}m
                     </p>
                   </div>
@@ -117,7 +123,7 @@ export function PresetsDialog({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-xs"
+                        className="h-8 px-2.5 sm:px-3 text-xs font-medium rounded-full shrink-0"
                         onClick={() => onSelectActivePreset(preset.id)}
                       >
                         Ativar
@@ -126,21 +132,21 @@ export function PresetsDialog({
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="size-8"
+                      className="size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 shrink-0 transition-colors"
                       title="Editar preset"
                       disabled={isBeingEdited}
                       onClick={() => onStartEdit(preset)}
                     >
-                      <Edit2 className="size-3.5" />
+                      <Pencil className="size-3.5" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="size-8 text-destructive hover:text-destructive"
+                      className="size-8 rounded-full text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-500/10 shrink-0 transition-colors"
                       title="Excluir preset"
                       onClick={() => onRequestDeletePreset(preset)}
                     >
-                      <Trash2 className="size-3.5" />
+                      <Trash className="size-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -154,30 +160,22 @@ export function PresetsDialog({
         {/* Formulário de Criação / Edição */}
         <form onSubmit={onSavePreset} className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {editingId ? "Editar Preset" : "Novo Preset"}
             </h4>
-            {editingId && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-muted-foreground"
-                onClick={onCancelEdit}
-              >
-                Cancelar Edição
-              </Button>
-            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="preset-name">Nome do preset (1 a 40 caracteres)</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="preset-name" className="text-xs font-medium text-foreground">
+              Nome do preset (1 a 40 caracteres)
+            </Label>
             <Input
               id="preset-name"
               type="text"
               placeholder="Ex: Estudos Intensivos"
               value={formData.name}
               maxLength={40}
+              className="h-10 rounded-xl bg-background"
               onChange={(e) =>
                 onFormDataChange({ ...formData, name: e.target.value })
               }
@@ -200,6 +198,7 @@ export function PresetsDialog({
                 min={1}
                 max={120}
                 value={formData.focusMinutes}
+                className="h-10 rounded-xl bg-background text-center font-medium"
                 onChange={(e) =>
                   onFormDataChange({
                     ...formData,
@@ -224,6 +223,7 @@ export function PresetsDialog({
                 min={1}
                 max={60}
                 value={formData.shortBreakMinutes}
+                className="h-10 rounded-xl bg-background text-center font-medium"
                 onChange={(e) =>
                   onFormDataChange({
                     ...formData,
@@ -248,6 +248,7 @@ export function PresetsDialog({
                 min={1}
                 max={12}
                 value={formData.cyclesBeforeLongBreak}
+                className="h-10 rounded-xl bg-background text-center font-medium"
                 onChange={(e) =>
                   onFormDataChange({
                     ...formData,
@@ -272,6 +273,7 @@ export function PresetsDialog({
                 min={1}
                 max={60}
                 value={formData.longBreakMinutes}
+                className="h-10 rounded-xl bg-background text-center font-medium"
                 onChange={(e) =>
                   onFormDataChange({
                     ...formData,
@@ -287,13 +289,31 @@ export function PresetsDialog({
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="submit">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto h-10 px-5 rounded-full font-medium"
+              onClick={() => {
+                if (editingId) {
+                  onCancelEdit();
+                } else {
+                  onCancelEdit();
+                  setIsOpen(false);
+                }
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto h-10 px-5 rounded-full font-semibold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-md whitespace-nowrap"
+            >
               {editingId ? (
                 "Salvar Alterações"
               ) : (
                 <>
-                  <Plus className="size-4" /> Cadastrar Preset
+                  <Plus className="size-4 shrink-0" /> Cadastrar Preset
                 </>
               )}
             </Button>
