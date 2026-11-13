@@ -1,5 +1,26 @@
 // src/lib/audio/sound-alert.ts
-// Módulo de alerta sonoro via Web Audio API nativa.
+// Módulo de alerta sonoro via Web Audio API nativa com controle de mudo.
+
+export const SOUND_STORAGE_KEY = "tomatimer:sound-enabled" as const;
+
+export function isSoundEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const stored = localStorage.getItem(SOUND_STORAGE_KEY);
+    return stored === null ? true : stored === "true";
+  } catch {
+    return true;
+  }
+}
+
+export function setSoundEnabled(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(SOUND_STORAGE_KEY, String(enabled));
+  } catch {
+    // Falha silenciosa caso o armazenamento esteja indisponível
+  }
+}
 
 let audioCtx: AudioContext | null = null;
 
@@ -77,6 +98,10 @@ function playTone(
  * Respeita RNF-10 e políticas de autoplay.
  */
 export async function playPhaseEndAlert(): Promise<void> {
+  if (!isSoundEnabled()) {
+    return;
+  }
+
   try {
     const ctx = getAudioContext();
     if (!ctx) return;

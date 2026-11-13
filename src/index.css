@@ -161,3 +161,10 @@
 .overlay-animate-out {
   animation: fadeOutOverlay 240ms ease-in forwards;
 }
+
+/* Transição de cores fluida para troca de tema (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}

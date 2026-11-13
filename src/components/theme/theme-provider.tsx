@@ -84,7 +84,19 @@ export function ThemeProvider({
       } catch {
         // storage disabled or full
       }
-      setThemeState(newTheme);
+
+      if (
+        typeof document !== "undefined" &&
+        "startViewTransition" in document &&
+        typeof (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition === "function" &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+          setThemeState(newTheme);
+        });
+      } else {
+        setThemeState(newTheme);
+      }
     },
     [storageKey]
   );
