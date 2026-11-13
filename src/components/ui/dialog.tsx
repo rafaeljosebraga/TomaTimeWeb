@@ -63,8 +63,9 @@ export const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     showClose?: boolean;
     handleCloseOnDrag?: boolean;
+    mobilePresentation?: "sheet" | "modal";
   }
->(({ className, children, showClose = false, handleCloseOnDrag = true, style, ...props }, ref) => {
+>(({ className, children, showClose = false, handleCloseOnDrag = true, mobilePresentation = "sheet", style, ...props }, ref) => {
   const closeDialog = React.useContext(DialogDragCloseContext);
   const [dragOffsetY, setDragOffsetY] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -148,10 +149,11 @@ export const DialogContent = React.forwardRef<
               : style?.transition,
         }}
         className={cn(
-          // Base — mobile: bottom sheet 100% largura
-          "fixed z-50 flex flex-col w-full border border-border bg-background shadow-2xl dialog-content-animate will-change-transform overflow-hidden",
+          "fixed z-50 flex flex-col border border-border bg-background shadow-2xl dialog-content-animate will-change-transform overflow-hidden",
           hasDragged && "dialog-dragged",
-          "inset-x-0 bottom-0 max-h-[90dvh] rounded-t-3xl border-b-0",
+          mobilePresentation === "sheet"
+            ? "inset-x-0 bottom-0 w-full max-h-[90dvh] rounded-t-3xl border-b-0"
+            : "left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-md max-h-[85vh] -translate-x-1/2 -translate-y-1/2 rounded-2xl",
           // Desktop: modal centralizado
           "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:max-h-[85vh] sm:rounded-2xl sm:border",
           className
