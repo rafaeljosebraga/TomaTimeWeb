@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Palette, Settings, MoreHorizontal, Volume2, VolumeX } from "lucide-react";
+import { Palette, MoreHorizontal, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/theme-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { PresetsDialog } from "@/components/pomodoro/presets-dialog";
 import { TimerStyleDialog } from "@/components/pomodoro/timer-style-dialog";
 import {
   playPhaseEndAlert,
@@ -11,11 +10,9 @@ import {
   isSoundEnabled,
   setSoundEnabled,
 } from "@/lib/audio/sound-alert";
-import type { PresetValidationErrors, TimerPreset } from "@/types/domain";
 
-export function QuickActionSidebar(_: QuickActionSidebarProps) {
+export function QuickActionSidebar() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [isPresetsOpen, setIsPresetsOpen] = useState(false);
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [soundEnabled, setSoundEnabledState] = useState(() => isSoundEnabled());
@@ -106,21 +103,6 @@ export function QuickActionSidebar(_: QuickActionSidebarProps) {
           )}
         </Button>
 
-        <div className="w-5 h-px bg-border/60 my-0.5" aria-hidden />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            setIsPresetsOpen(true);
-            setIsStyleDialogOpen(false);
-          }}
-          className="size-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-          title="Configurações de temporizadores (presets)"
-          aria-label="Abrir configurações de temporizadores"
-        >
-          <Settings className="size-5 transition-transform hover:rotate-45" />
-        </Button>
       </aside>
 
       {/* 2. Mobile (< sm): No cabeçalho: primeiro Lua/Sol, depois os 3 pontinhos (...) com espaçamento confortável */}
@@ -202,23 +184,6 @@ export function QuickActionSidebar(_: QuickActionSidebarProps) {
         onOpenChange={setIsStyleDialogOpen}
       />
 
-      {/* Modal de Configurações / Presets acionado pelo botão de Settings */}
-      <PresetsDialog
-        open={isPresetsOpen}
-        onOpenChange={setIsPresetsOpen}
-        showTrigger={false}
-        presets={presets}
-        activePresetId={activePresetId}
-        formData={formData}
-        editingId={editingId}
-        formErrors={formErrors}
-        onFormDataChange={onFormDataChange}
-        onSavePreset={onSavePreset}
-        onSelectActivePreset={onSelectActivePreset}
-        onStartEdit={onStartEdit}
-        onCancelEdit={onCancelEdit}
-        onRequestDeletePreset={onRequestDeletePreset}
-      />
     </>
   );
 }
