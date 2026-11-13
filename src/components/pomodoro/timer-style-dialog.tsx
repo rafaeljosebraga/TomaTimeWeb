@@ -17,6 +17,7 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
   const { timerStyle, setTimerStyle } = useTimerStyle();
   const [dragOffsetY, setDragOffsetY] = React.useState(0);
   const [isDraggingSheet, setIsDraggingSheet] = React.useState(false);
+  const [isClosing, setIsClosing] = React.useState(false);
   const dragStartYRef = React.useRef<number | null>(null);
 
   const handleSelect = (id: TimerStyle) => {
@@ -24,9 +25,14 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
   };
 
   const handleClose = React.useCallback(() => {
-    setDragOffsetY(0);
-    onOpenChange(false);
-  }, [onOpenChange]);
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      setDragOffsetY(0);
+      onOpenChange(false);
+    }, 240);
+  }, [isClosing, onOpenChange]);
 
   // Fecha com a tecla ESC
   React.useEffect(() => {
@@ -40,23 +46,24 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, handleClose]);
 
-  if (!open) return null;
+  if (!open && !isClosing) return null;
 
   return (
     <>
-      {/* Backdrop escuro com DESFOQUE (backdrop-blur-sm / backdrop-blur-md) em z-40:
-          O fundo da página fica ofuscado/desfocado, mas a barra lateral de 3 botões (em z-50)
-          permanece à frente, 100% nítida e visível junto com o card de Estética! */}
+      {/* Backdrop escuro com DESFOQUE:
+          - No desktop (sm:z-40): desfoca a página, mas deixa a barra lateral fixa (em z-[60]) 100% nítida!
+          - No mobile (z-50): cobre o conteúdo da página sob o bottom sheet (em z-[60]) */}
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in"
+        className={`fixed inset-0 z-50 sm:z-40 bg-black/60 backdrop-blur-sm transition-opacity ${
+          isClosing ? "overlay-animate-out" : "overlay-animate-in"
+        }`}
         onClick={handleClose}
         aria-hidden="true"
       />
 
-      {/* CARD FLUTUANTE DE ESTÉTICA (z-50):
-          - Desktop (sm:): Fica ao lado da barra lateral (left-[72px] top-1/2 -translate-y-1/2),
-            ambos em z-50, nítidos juntos em cima do fundo desfocado!
-          - Mobile (<sm): Bottom Sheet ergonômico no rodapé com drag-to-dismiss. */}
+      {/* CARD FLUTUANTE DE ESTÉTICA (z-[60]):
+          - Desktop (sm:): Fica ao lado da barra lateral (left-[88px] md:left-[96px] top-1/2 -translate-y-1/2)
+          - Mobile (<sm): Bottom Sheet deslizando de baixo para cima com animação nativa fluida */}
       <div
         role="dialog"
         aria-modal="true"
@@ -68,7 +75,13 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
             ? "none"
             : "transform 250ms cubic-bezier(0.16, 1, 0.3, 1)",
         }}
-        className="fixed z-50 w-full sm:w-[500px] md:w-[540px] max-h-[85vh] sm:max-h-[85vh] inset-x-0 bottom-0 sm:inset-auto sm:left-[88px] md:sm:left-[96px] sm:top-1/2 sm:-translate-y-1/2 rounded-t-3xl sm:rounded-3xl border border-border/90 bg-card/95 text-card-foreground shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl flex flex-col overflow-hidden will-change-transform animate-in slide-in-from-bottom sm:slide-in-from-left-4 fade-in-50 duration-200 ease-out"
+        className={`fixed z-[60] w-full sm:w-[500px] md:w-[540px] max-h-[85vh] sm:max-h-[85vh] inset-x-0 bottom-0 sm:inset-auto sm:left-[88px] md:sm:left-[96px] sm:top-1/2 sm:-translate-y-1/2 rounded-t-3xl sm:rounded-3xl border border-border/90 bg-card/95 text-card-foreground shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl flex flex-col overflow-hidden will-change-transform ${
+          isDraggingSheet
+            ? ""
+            : isClosing
+            ? "sheet-animate-out"
+            : "sheet-animate-in"
+        }`}
       >
         {/* Puxador para mobile (arrastar para baixo fecha) */}
         <button
@@ -113,8 +126,8 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
         </div>
 
         {/* Conteúdo com os Estilos Lado a Lado */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 custom-scrollbar">
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-5 custom-scrollbar">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {TIMER_STYLE_OPTIONS.map((option) => {
               const isSelected = timerStyle === option.id;
 
@@ -123,7 +136,7 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                   key={option.id}
                   type="button"
                   onClick={() => handleSelect(option.id)}
-                  className={`group relative flex flex-col items-stretch overflow-hidden rounded-2xl border text-left transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  className={`group relative flex flex-col items-stretch overflow-hidden rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     isSelected
                       ? "border-primary/80 ring-2 ring-primary/40 shadow-md bg-accent/40"
                       : "border-border/70 hover:border-border hover:bg-muted/40 bg-card/60"
@@ -131,15 +144,15 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                 >
                   {/* Badge de Check no canto superior direito quando selecionado */}
                   {isSelected && (
-                    <div className="absolute top-2 right-2 z-10 flex size-4 sm:size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex size-4 sm:size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
                       <Check className="size-2.5 sm:size-3 stroke-[3]" />
                     </div>
                   )}
 
                   {/* Prévia visual em miniatura */}
-                  <div className="flex h-24 sm:h-28 items-center justify-center p-2 bg-muted/20">
+                  <div className="flex h-20 sm:h-28 items-center justify-center p-1.5 sm:p-2 bg-muted/20">
                     {option.id === "ring" && (
-                      <div className="relative flex size-16 sm:size-20 items-center justify-center">
+                      <div className="relative flex size-14 sm:size-20 items-center justify-center">
                         <svg viewBox="0 0 80 80" className="size-full -rotate-90">
                           <circle
                             cx="40"
@@ -163,14 +176,14 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                             className="text-primary"
                           />
                         </svg>
-                        <span className="absolute font-mono text-xs sm:text-sm font-semibold tracking-tight text-foreground">
+                        <span className="absolute font-sans text-[11px] sm:text-sm font-bold tracking-tight text-foreground">
                           25:00
                         </span>
                       </div>
                     )}
 
                     {option.id === "ticks" && (
-                      <div className="relative flex size-16 sm:size-20 items-center justify-center">
+                      <div className="relative flex size-14 sm:size-20 items-center justify-center">
                         <svg viewBox="0 0 80 80" className="size-full">
                           {Array.from({ length: 36 }).map((_, i) => {
                             const angle = (i * 360) / 36;
@@ -195,15 +208,15 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                             );
                           })}
                         </svg>
-                        <span className="absolute font-mono text-xs sm:text-sm font-semibold tracking-tight text-foreground">
+                        <span className="absolute font-sans text-[11px] sm:text-sm font-bold tracking-tight text-foreground">
                           25:00
                         </span>
                       </div>
                     )}
 
                     {option.id === "minimal" && (
-                      <div className="flex items-center justify-center">
-                        <span className="font-mono text-base sm:text-lg font-bold tracking-tight text-foreground">
+                      <div className="relative flex size-14 sm:size-20 items-center justify-center rounded-full border border-dashed border-border/60 bg-muted/10">
+                        <span className="font-sans text-[11px] sm:text-sm font-bold tracking-tight text-foreground">
                           25:00
                         </span>
                       </div>
@@ -212,14 +225,21 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
 
                   {/* Faixa inferior com o nome do estilo */}
                   <div
-                    className={`px-2 py-1.5 sm:py-2 text-center text-xs transition-colors ${
+                    className={`px-1 py-1.5 sm:px-2 sm:py-2 text-center text-xs transition-colors ${
                       isSelected
                         ? "bg-primary text-primary-foreground font-semibold"
                         : "bg-muted/50 text-muted-foreground group-hover:text-foreground font-medium"
                     }`}
                   >
-                    <span className="truncate block">
-                      {option.label}
+                    <span className="block text-[10px] sm:text-xs leading-tight font-medium">
+                      {option.id === "minimal" ? (
+                        <>
+                          <span className="sm:hidden">Números</span>
+                          <span className="hidden sm:inline">Apenas números</span>
+                        </>
+                      ) : (
+                        option.label
+                      )}
                     </span>
                   </div>
                 </button>

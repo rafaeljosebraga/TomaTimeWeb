@@ -50,10 +50,10 @@ export function QuickActionSidebar({
 
   return (
     <>
-      {/* 1. Desktop (sm:): Pílula flutuante lateral esquerda fixa */}
+      {/* 1. Desktop (sm:): Pílula flutuante lateral esquerda fixa (z-[60] para ficar nítida à frente do backdrop) */}
       <aside
         aria-label="Ações rápidas e preferências"
-        className="hidden sm:flex fixed left-4 top-1/2 -translate-y-1/2 z-50 flex-col items-center gap-1.5 rounded-full border border-border/80 bg-card/85 p-1.5 shadow-xl dark:shadow-[0_15px_40px_rgba(0,0,0,0.85)] dark:border-border backdrop-blur-md transition-all hover:bg-card/95 hover:border-border"
+        className="hidden sm:flex fixed left-4 top-1/2 -translate-y-1/2 z-[60] flex-col items-center gap-1.5 rounded-full border border-border/80 bg-card/85 p-1.5 shadow-xl dark:shadow-[0_15px_40px_rgba(0,0,0,0.85)] dark:border-border backdrop-blur-md transition-all hover:bg-card/95 hover:border-border"
       >
         <Button
           variant="ghost"
