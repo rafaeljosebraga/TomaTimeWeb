@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DialogDragCloseContext = React.createContext<(() => void) | null>(null);
+const DialogOpenContext = React.createContext(true);
 
 export function Dialog({
   open: controlledOpen,
@@ -30,13 +31,15 @@ export function Dialog({
   }, [handleOpenChange]);
 
   return (
-    <DialogDragCloseContext.Provider value={closeDialog}>
-      <DialogPrimitive.Root
-        open={open}
-        onOpenChange={handleOpenChange}
-        {...props}
-      />
-    </DialogDragCloseContext.Provider>
+    <DialogOpenContext.Provider value={open}>
+      <DialogDragCloseContext.Provider value={closeDialog}>
+        <DialogPrimitive.Root
+          open={open}
+          onOpenChange={handleOpenChange}
+          {...props}
+        />
+      </DialogDragCloseContext.Provider>
+    </DialogOpenContext.Provider>
   );
 }
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -67,9 +70,13 @@ export const DialogContent = React.forwardRef<
   }
 >(({ className, children, showClose = false, handleCloseOnDrag = true, mobilePresentation = "sheet", style, ...props }, ref) => {
   const closeDialog = React.useContext(DialogDragCloseContext);
+  const isDialogOpen = React.useContext(DialogOpenContext);
   const [dragOffsetY, setDragOffsetY] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
   const [hasDragged, setHasDragged] = React.useState(false);
+  const [sheetMotionState, setSheetMotionState] = React.useState<
+    "entering" | "open" | "closing"
+  >(isDialogOpen ? "entering" : "closing");
   const dragStartYRef = React.useRef<number | null>(null);
   const dragOffsetYRef = React.useRef(0);
   const didDragRef = React.useRef(false);
@@ -77,6 +84,22 @@ export const DialogContent = React.forwardRef<
   const mouseCleanupRef = React.useRef<(() => void) | null>(null);
   const resetDidDragTimeoutRef = React.useRef<number | null>(null);
   const fallbackResetTimeoutRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    if (mobilePresentation !== "sheet") return;
+
+    if (!isDialogOpen) {
+      setSheetMotionState("closing");
+      return;
+    }
+
+    setSheetMotionState("entering");
+    const frameId = window.requestAnimationFrame(() => {
+      setSheetMotionState("open");
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isDialogOpen, mobilePresentation]);
 
   React.useEffect(() => {
     return () => {
@@ -159,6 +182,7 @@ export const DialogContent = React.forwardRef<
           className
         )}
         data-mobile-presentation={mobilePresentation}
+        data-sheet-motion={mobilePresentation === "sheet" ? sheetMotionState : undefined}
         {...props}
       >
         <DialogPrimitive.Close
