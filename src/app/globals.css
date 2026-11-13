@@ -177,11 +177,11 @@
 @media (max-width: 639px) {
   .dialog-content-animate[data-mobile-presentation="sheet"]:not(.dialog-dragged)[data-state="open"] {
     transform-origin: center bottom;
-    animation: slideUpSheet 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: slideUpSheet 1000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
   .dialog-content-animate[data-mobile-presentation="sheet"][data-state="closed"] {
     transform-origin: center bottom;
-    animation: slideDownSheet 380ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+    animation: slideDownSheet 650ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
   }
 }
 
