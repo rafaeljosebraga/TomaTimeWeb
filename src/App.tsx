@@ -48,6 +48,7 @@ import {
   updateTask,
 } from "@/lib/storage/tasks-storage";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { TimerStyleProvider } from "@/components/theme/timer-style-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { TimerPanel } from "@/components/pomodoro/timer-panel";
 import { TaskPanel } from "@/components/pomodoro/task-panel";
@@ -490,7 +491,8 @@ export function App() {
 
   return (
     <ThemeProvider defaultTheme="system">
-      <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200 selection:bg-primary/20">
+      <TimerStyleProvider>
+        <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200 selection:bg-primary/20">
         {/* Textura sutil de fundo radial no centro da tela */}
         <div
           aria-hidden
@@ -756,6 +758,7 @@ export function App() {
           onCancel={handleCancelDelete}
         />
       </div>
+      </TimerStyleProvider>
     </ThemeProvider>
   );
 }
