@@ -234,3 +234,61 @@
 .dropdown-animate[data-state="closed"] {
   animation: dropdownFadeOut 120ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Animações fluidas para o Bottom Sheet mobile e Card desktop */
+@keyframes slideInDesktop {
+  from {
+    opacity: 0;
+    transform: translate(-16px, -50%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+.sheet-animate-in {
+  animation: slideUpSheet 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .sheet-animate-in {
+    animation: slideInDesktop 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+.overlay-animate-in {
+  animation: fadeInOverlay 200ms ease-out forwards;
+}
+
+@keyframes slideOutDesktop {
+  from {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-16px, -50%);
+  }
+}
+
+.sheet-animate-out {
+  animation: slideDownSheet 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .sheet-animate-out {
+    animation: slideOutDesktop 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+.overlay-animate-out {
+  animation: fadeOutOverlay 240ms ease-in forwards;
+}
+
+/* Transição de cores fluida para troca de tema (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
