@@ -296,6 +296,13 @@ export function App() {
     setGlobalMessage(null);
   }
 
+  function handleStartCreatePreset() {
+    setEditingId(null);
+    setFormData(INITIAL_FORM_DATA);
+    setFormErrors({});
+    setGlobalMessage(null);
+  }
+
   function handleCancelEdit() {
     setEditingId(null);
     setFormData(INITIAL_FORM_DATA);
@@ -545,6 +552,7 @@ export function App() {
                 onSkipStage={handleSkipStage}
                 onEndSession={handleEndSession}
                 onSelectActivePreset={handleSelectActivePreset}
+                onCreatePreset={handleStartCreatePreset}
                 onFormDataChange={setFormData}
                 onSavePreset={handleSavePreset}
                 onStartEdit={handleStartEdit}
