@@ -33,8 +33,6 @@ export function DeleteDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
         className="sm:max-w-md"
-        mobilePresentation="modal"
-        handleCloseOnDrag={false}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
