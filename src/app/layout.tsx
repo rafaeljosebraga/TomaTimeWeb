@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Tomatimer — Gestão de Foco e Estudo",
+  title: "Tomatimer",
   description: "Aplicação web de temporizador Pomodoro e gestão de tarefas.",
   icons: {
     icon: "/favicon.svg",

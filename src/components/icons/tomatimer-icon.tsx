@@ -1,12 +1,22 @@
 import type { SVGProps } from "react";
 
-export function TomatimerIcon({ className = "size-4.5", ...props }: SVGProps<SVGSVGElement>) {
+interface TomatimerIconProps extends SVGProps<SVGSVGElement> {
+  isRunning?: boolean;
+}
+
+export function TomatimerIcon({
+  className = "size-4.5",
+  isRunning = false,
+  ...props
+}: TomatimerIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 512 512"
       fill="currentColor"
-      className={className}
+      className={`tomatimer-hover-wiggle transition-transform duration-300 ease-out will-change-transform cursor-pointer ${
+        isRunning ? "tomatimer-running" : ""
+      } ${className}`}
       aria-hidden="true"
       {...props}
     >

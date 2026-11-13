@@ -310,9 +310,110 @@
   animation: fadeOutOverlay 240ms ease-in forwards;
 }
 
+/* Animações de entrada e saída da pílula do menu móvel */
+@keyframes mobilePillIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes mobilePillOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.92);
+  }
+}
+
+.mobile-pill-in {
+  animation: mobilePillIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mobile-pill-out {
+  animation: mobilePillOut 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 /* Transição de cores fluida para troca de tema (View Transitions API) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 350ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Giro suave anti-horário de 360° com desaceleração e amortecimento suave */
+@keyframes spinCcwSmooth {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-once-smooth {
+  animation: spinCcwSmooth 650ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Animação tátil para o check do checkbox (desenho/pop elástico) */
+@keyframes checkPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-15deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.2) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.check-animate-in {
+  animation: checkPopIn 220ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Animação tátil e orgânica para o ícone Tomatimer */
+@keyframes tomatimerWiggle {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-10deg) scale(1.12);
+  }
+  40% {
+    transform: rotate(8deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(-4deg) scale(1.04);
+  }
+  80% {
+    transform: rotate(2deg) scale(1.02);
+  }
+}
+
+@keyframes tomatimerPulseRunning {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.tomatimer-hover-wiggle:hover {
+  animation: tomatimerWiggle 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tomatimer-running {
+  animation: tomatimerPulseRunning 2s ease-in-out infinite;
 }

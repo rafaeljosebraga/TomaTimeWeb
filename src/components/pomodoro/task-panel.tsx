@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { ClipboardList, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +43,50 @@ export function TaskPanel({
   const doneCount = tasks.filter((t) => t.state === "concluída").length;
   const sortedTasks = sortTasks(tasks);
 
+  // FLIP Animation: animação de reordenação suave dos cards
+  const listRef = useRef<HTMLUListElement>(null);
+  const prevPositionsRef = useRef<Map<string, number>>(new Map());
+
+  useLayoutEffect(() => {
+    if (!listRef.current) return;
+
+    const listElement = listRef.current;
+    const items = listElement.querySelectorAll<HTMLElement>("[data-task-id]");
+    const prevPositions = prevPositionsRef.current;
+
+    items.forEach((item) => {
+      const id = item.dataset.taskId;
+      if (!id) return;
+
+      const currentTop = item.getBoundingClientRect().top;
+      const prevTop = prevPositions.get(id);
+
+      if (prevTop !== undefined && prevTop !== currentTop) {
+        const deltaY = prevTop - currentTop;
+        // Inverte instantaneamente para a posição anterior
+        item.style.transform = `translateY(${deltaY}px)`;
+        item.style.transition = "none";
+
+        // Força repaint para registrar o início
+        item.getBoundingClientRect();
+
+        // Desliza suavemente até a nova posição
+        item.style.transition = "transform 400ms cubic-bezier(0.16, 1, 0.3, 1)";
+        item.style.transform = "translateY(0)";
+      }
+    });
+
+    // Salva posições atuais para o próximo ciclo
+    const newPositions = new Map<string, number>();
+    items.forEach((item) => {
+      const id = item.dataset.taskId;
+      if (id) {
+        newPositions.set(id, item.getBoundingClientRect().top);
+      }
+    });
+    prevPositionsRef.current = newPositions;
+  }, [sortedTasks]);
+
   return (
     <Card className="flex flex-col h-full border-0 lg:border border-border bg-transparent lg:bg-card shadow-none lg:shadow-xl dark:lg:shadow-[0_20px_50px_rgba(0,0,0,0.7)] dark:border-border/80 justify-between px-0 sm:px-6 pt-1 sm:pt-6 pb-1 sm:pb-1.5">
       <CardHeader className="flex flex-row items-center justify-between gap-2 p-0 pb-3 shrink-0">
@@ -59,10 +104,10 @@ export function TaskPanel({
         <div className="flex items-center gap-1.5 shrink-0">
           <Button
             size="sm"
-            className="h-8 sm:h-9 gap-1.5 px-3.5 text-xs font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-sm shrink-0 whitespace-nowrap"
+            className="group/plus h-8 sm:h-9 gap-1.5 px-3.5 text-xs font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-sm shrink-0 whitespace-nowrap active:scale-95 transition-all"
             onClick={onOpenCreateDialog}
           >
-            <Plus className="size-3.5 sm:size-4 shrink-0" />
+            <Plus className="size-3.5 sm:size-4 shrink-0 transition-transform duration-300 ease-out group-active/plus:rotate-90 group-active/plus:scale-110" />
             <span>Nova Tarefa</span>
           </Button>
         </div>
@@ -86,7 +131,10 @@ export function TaskPanel({
             </Button>
           </div>
         ) : (
-          <ul className="space-y-2.5 flex-1 min-h-0 overflow-y-auto pr-1.5 pb-2 custom-scrollbar max-h-[60vh] lg:max-h-[500px]">
+          <ul
+            ref={listRef}
+            className="space-y-2.5 flex-1 min-h-0 overflow-y-auto pr-1.5 pb-2 custom-scrollbar max-h-[60vh] lg:max-h-[500px]"
+          >
             {sortedTasks.map((task) => (
               <TaskItem
                 key={task.id}
