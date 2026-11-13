@@ -7,7 +7,7 @@ import {
   setSoundEnabled,
 } from "./sound-alert";
 
-describe("sound-alert (Alerta Sonoro RF-14, RN-13, RNF-10)", () => {
+describe("sound-alert (Alerta Sonoro)", () => {
   let mockResume: ReturnType<typeof vi.fn>;
   let mockCreateOscillator: ReturnType<typeof vi.fn>;
   let mockCreateGain: ReturnType<typeof vi.fn>;

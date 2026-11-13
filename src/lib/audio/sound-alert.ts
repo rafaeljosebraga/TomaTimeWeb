@@ -52,7 +52,7 @@ function getAudioContext(): AudioContext | null {
 
 /**
  * Inicializa ou desbloqueia o AudioContext a partir de um gesto do usuário (ex: clique em Iniciar).
- * Mitiga o risco R-01 (política de autoplay do navegador).
+ * Previne bloqueios pela política de autoplay do navegador.
  */
 export async function primeAudioContext(): Promise<void> {
   try {
@@ -95,7 +95,7 @@ function playTone(
 
 /**
  * Emite o alerta sonoro agradável ao fim de cada fase (duplo chime harmônico).
- * Respeita RNF-10 e políticas de autoplay.
+ * Respeita políticas de reprodução de áudio do navegador.
  */
 export async function playPhaseEndAlert(): Promise<void> {
   if (!isSoundEnabled()) {

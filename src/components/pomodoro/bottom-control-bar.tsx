@@ -5,6 +5,7 @@ import {
   SkipForward,
   Square,
   ListTodo,
+  Timer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionTimer } from "@/types/domain";
@@ -20,6 +21,8 @@ interface BottomControlBarProps {
   onEndSession: () => void;
   isTasksOpen?: boolean;
   onToggleTasks?: () => void;
+  hasNoPresets?: boolean;
+  onAddPreset?: () => void;
 }
 
 export function BottomControlBar({
@@ -33,6 +36,8 @@ export function BottomControlBar({
   onEndSession,
   isTasksOpen,
   onToggleTasks,
+  hasNoPresets = false,
+  onAddPreset,
 }: BottomControlBarProps) {
   return (
     <div className="fixed bottom-4 sm:bottom-6 left-0 right-0 z-40 flex items-center justify-center pointer-events-none px-2 sm:px-4">
@@ -45,7 +50,8 @@ export function BottomControlBar({
         <Button
           variant="ghost"
           size="sm"
-          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0"
+          disabled={hasNoPresets}
+          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 disabled:opacity-40 disabled:pointer-events-none"
           onClick={onSkipStage}
           aria-label="Pular fase atual"
           title="Pular Fase"
@@ -58,7 +64,8 @@ export function BottomControlBar({
         <Button
           variant="ghost"
           size="sm"
-          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0"
+          disabled={hasNoPresets}
+          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 disabled:opacity-40 disabled:pointer-events-none"
           onClick={onResetCycles}
           aria-label="Reiniciar contagem de ciclos"
           title="Reiniciar Ciclo"
@@ -69,7 +76,17 @@ export function BottomControlBar({
 
         {/* 3. BOTÃO PRINCIPAL DE DESTAQUE CENTRAL COM TOOLTIP FLUTUANTE (Largura fixa para não oscilar a barra) */}
         <div className="relative group/mainbtn flex items-center justify-center flex-1 min-w-0 sm:flex-initial">
-          {timer.phase === "idle" && (
+          {hasNoPresets ? (
+            <Button
+              size="lg"
+              className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
+              onClick={onAddPreset}
+              aria-label="Adicionar preset"
+            >
+              <Timer className="size-4.5 sm:size-5 mr-0.5 sm:mr-1" />
+              Adicionar
+            </Button>
+          ) : timer.phase === "idle" ? (
             <Button
               size="lg"
               className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
@@ -79,9 +96,7 @@ export function BottomControlBar({
               <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
               Começar
             </Button>
-          )}
-
-          {timer.phase === "running" && (
+          ) : timer.phase === "running" ? (
             <Button
               size="lg"
               className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
@@ -91,9 +106,7 @@ export function BottomControlBar({
               <Pause className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
               Pausar
             </Button>
-          )}
-
-          {timer.phase === "paused" && (
+          ) : timer.phase === "paused" ? (
             <Button
               size="lg"
               className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
@@ -103,9 +116,7 @@ export function BottomControlBar({
               <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
               Retomar
             </Button>
-          )}
-
-          {timer.phase === "completed" && (
+          ) : (
             <Button
               size="lg"
               className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
@@ -120,7 +131,9 @@ export function BottomControlBar({
           {/* Tooltip flutuante e discreto ao passar o mouse */}
           <div className="absolute -top-11 left-1/2 -translate-x-1/2 pointer-events-none hidden sm:flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-border/80 bg-neutral-900/90 text-white dark:bg-neutral-100 dark:text-neutral-900 px-2.5 py-1 text-[11px] font-medium shadow-md backdrop-blur-xs opacity-0 translate-y-1 transition-all group-hover/mainbtn:opacity-100 group-hover/mainbtn:translate-y-0 duration-150 z-50">
             <span>
-              {timer.phase === "running"
+              {hasNoPresets
+                ? "Adicionar"
+                : timer.phase === "running"
                 ? "Pausar"
                 : timer.phase === "paused"
                 ? "Retomar"
@@ -136,7 +149,8 @@ export function BottomControlBar({
         <Button
           variant="ghost"
           size="sm"
-          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/10 dark:hover:text-red-400 dark:hover:bg-red-500/15 transition-colors shrink-0"
+          disabled={hasNoPresets}
+          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/10 dark:hover:text-red-400 dark:hover:bg-red-500/15 transition-colors shrink-0 disabled:opacity-40 disabled:pointer-events-none"
           onClick={onEndSession}
           aria-label="Encerrar sessão ativa"
           title="Encerrar Sessão"

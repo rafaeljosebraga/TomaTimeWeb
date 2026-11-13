@@ -35,6 +35,7 @@ import {
   loadPresets,
   setActivePresetId,
   updatePreset,
+  DEFAULT_PRESETS,
 } from "@/lib/storage/presets-storage";
 import {
   clearSessionTimer,
@@ -106,12 +107,15 @@ export function App() {
     getActivePresetId()
   );
 
+  const hasNoPresets = presets.length === 0;
+
   const [isResumedSession, setIsResumedSession] = useState<boolean>(() =>
     hasStoredActiveSession()
   );
 
   const [timer, setTimer] = useState<SessionTimer>(() => {
-    const active = getPresetById(getActivePresetId()) ?? loadPresets()[0]!;
+    const loaded = loadPresets();
+    const active = getPresetById(getActivePresetId()) ?? loaded[0] ?? DEFAULT_PRESETS[0]!;
     return loadSessionTimer(active);
   });
 
@@ -156,7 +160,7 @@ export function App() {
     };
   }, [timer.phase]);
 
-  // Atalho de teclado: barra de espaço para alternar Iniciar / Pausar
+  // Atalho de teclado: barra de espaço para alternar Iniciar / Pausar ou Adicionar Preset
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.code !== "Space" || e.repeat) return;
@@ -166,6 +170,10 @@ export function App() {
         return;
       }
       e.preventDefault();
+      if (hasNoPresets) {
+        handleStartCreatePreset();
+        return;
+      }
       if (timer.phase === "running") {
         handlePause();
       } else if (timer.phase === "paused") {
@@ -177,10 +185,11 @@ export function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [timer]);
+  }, [timer, hasNoPresets]);
 
   // Controles do timer
   function handleStart() {
+    if (hasNoPresets) return;
     primeAudioContext();
     const updated = startSessionTimer(timer);
     setTimer(updated);
@@ -188,12 +197,14 @@ export function App() {
   }
 
   function handlePause() {
+    if (hasNoPresets) return;
     const updated = pauseSessionTimer(timer);
     setTimer(updated);
     saveSessionTimer(updated);
   }
 
   function handleResume() {
+    if (hasNoPresets) return;
     primeAudioContext();
     const updated = resumeSessionTimer(timer);
     setTimer(updated);
@@ -201,12 +212,14 @@ export function App() {
   }
 
   function handleReset() {
+    if (hasNoPresets) return;
     const updated = resetSessionTimer(timer);
     setTimer(updated);
     saveSessionTimer(updated);
   }
 
   function handleResetCycles() {
+    if (hasNoPresets) return;
     setPendingConfirm({
       type: "resetCycles",
       title: "Reiniciar Ciclos",
@@ -216,6 +229,7 @@ export function App() {
   }
 
   function handleSkipStage() {
+    if (hasNoPresets) return;
     const updated = skipSessionStage(timer);
     setTimer(updated);
     saveSessionTimer(updated);
@@ -223,6 +237,7 @@ export function App() {
   }
 
   function handleEndSession() {
+    if (hasNoPresets) return;
     setPendingConfirm(getSessionEndConfirmation(isResumedSession));
   }
 
@@ -331,6 +346,14 @@ export function App() {
       setPresets(reloaded);
       setGlobalMessage(`Preset "${result.data.name}" criado com sucesso.`);
       handleCancelEdit();
+
+      if (hasNoPresets || !activePresetId) {
+        setActivePresetId(result.data.id);
+        setActiveId(result.data.id);
+        const newTimer = createSessionTimer(result.data);
+        setTimer(newTimer);
+        saveSessionTimer(newTimer);
+      }
     }
   }
 
@@ -370,6 +393,18 @@ export function App() {
       const newActiveId = getActivePresetId();
       setPresets(reloaded);
       setActiveId(newActiveId);
+
+      if (reloaded.length === 0) {
+        clearSessionTimer();
+        setIsResumedSession(false);
+      } else if (newActiveId) {
+        const nextPreset = getPresetById(newActiveId);
+        if (nextPreset && timer.preset.id === pendingDelete.id) {
+          const newTimer = createSessionTimer(nextPreset);
+          setTimer(newTimer);
+          saveSessionTimer(newTimer);
+        }
+      }
 
       if (editingId === pendingDelete.id) {
         handleCancelEdit();
@@ -511,8 +546,7 @@ export function App() {
           <h1 className="sr-only">Tomatimer — Temporizador Pomodoro de Estudos</h1>
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
-          <QuickActionSidebar
-          />
+          <QuickActionSidebar />
 
           {/* Layout Principal com Transição do Painel de Tarefas */}
           <div className="flex flex-col lg:flex-row items-stretch justify-center gap-6">
@@ -687,6 +721,8 @@ export function App() {
             onEndSession={handleEndSession}
             isTasksOpen={isTasksPanelOpen}
             onToggleTasks={() => setIsTasksPanelOpen((prev) => !prev)}
+            hasNoPresets={hasNoPresets}
+            onAddPreset={handleStartCreatePreset}
           />
         </main>
 
@@ -729,7 +765,7 @@ export function App() {
           onCancel={handleCancelEdit}
         />
 
-        {/* Diálogo de Confirmação Genérica (UC07, UC08, UC11) */}
+        {/* Diálogo de Confirmação de Ações da Sessão */}
         <ConfirmDialog
           action={pendingConfirm}
           onConfirm={handleExecuteConfirmedAction}

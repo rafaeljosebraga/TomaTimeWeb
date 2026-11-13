@@ -86,10 +86,11 @@ export function TimerPanel({
   onCancelEdit,
   onRequestDeletePreset,
 }: TimerPanelProps) {
+  const hasNoPresets = presets.length === 0;
   const remainingSecs = getRemainingSeconds(timer);
-  const remainingFormatted = formatTime(remainingSecs);
+  const remainingFormatted = hasNoPresets ? "--:--" : formatTime(remainingSecs);
   const totalDurationMs = timer.durationMs > 0 ? timer.durationMs : 1;
-  const progress = 1 - timer.remainingMs / totalDurationMs;
+  const progress = hasNoPresets ? 0 : 1 - timer.remainingMs / totalDurationMs;
   const activePreset = presets.find((p) => p.id === activePresetId) ?? timer.preset;
 
   return (
@@ -102,7 +103,7 @@ export function TimerPanel({
           className="flex w-auto max-w-full items-center gap-1 rounded-full border border-neutral-200/60 bg-neutral-100/90 p-1 dark:border-neutral-800 dark:bg-neutral-900/80 overflow-x-auto custom-scrollbar-h scroll-smooth"
         >
           {STAGES.map((s) => {
-            const isCurrent = timer.stage === s.stage;
+            const isCurrent = !hasNoPresets && timer.stage === s.stage;
             return (
               <span
                 key={s.stage}
@@ -132,6 +133,7 @@ export function TimerPanel({
           completedCycles={timer.completedCycles}
           cyclesBeforeLongBreak={timer.preset.cyclesBeforeLongBreak}
           onReset={onReset}
+          hasNoPresets={hasNoPresets}
         />
 
         {/* Detalhes de status e ciclos (linha estática para não haver salto de layout) */}
@@ -142,7 +144,9 @@ export function TimerPanel({
           <span className="text-muted-foreground/40 font-bold hidden sm:inline">·</span>
           <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-neutral-200/80 bg-neutral-100 px-2 sm:px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-neutral-800 shadow-2xs dark:border-neutral-700/80 dark:bg-neutral-800 dark:text-neutral-100 transition-colors whitespace-nowrap">
             <TimerIcon className="size-3 sm:size-3.5 text-neutral-600 dark:text-neutral-300" />
-            {timer.phase === "running" && timer.endsAt
+            {hasNoPresets
+              ? "Sem preset"
+              : timer.phase === "running" && timer.endsAt
               ? `Fim às ${new Date(timer.endsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
               : timer.phase === "paused"
               ? "Pausado"

@@ -64,7 +64,7 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     expect(restored.remainingMs).toBe(20 * 60 * 1000);
   });
 
-  it("deve avançar sequencialmente para a fase vigente caso o tempo tenha expirado enquanto a página esteve fechada (RN-07)", () => {
+  it("deve avançar sequencialmente para a fase vigente caso o tempo tenha expirado enquanto a página esteve fechada", () => {
     const initialTimer = createSessionTimer(mockPreset);
     const runningTimer = startSessionTimer(initialTimer, BASE_NOW);
     saveSessionTimer(runningTimer);
@@ -81,7 +81,7 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     expect(restored.endsAt).toBe(BASE_NOW + 30 * 60 * 1000);
   });
 
-  it("deve avançar para TPL em andamento caso o ciclo expirado atinja a meta de ciclos (RN-07)", () => {
+  it("deve avançar para TPL em andamento caso o ciclo expirado atinja a meta de ciclos", () => {
     // Timer no 4º ciclo de foco prestes a terminar aos 25 minutos
     const almostDoneTimer: SessionTimer = {
       preset: mockPreset,
@@ -107,7 +107,7 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     expect(restored.endsAt).toBe(BASE_NOW + 40 * 60 * 1000);
   });
 
-  it("deve encerrar a sessão com status concluído caso todas as fases previstas tenham vencido (RN-08)", () => {
+  it("deve encerrar a sessão com status concluído caso todas as fases previstas tenham vencido", () => {
     // Timer no 4º ciclo de foco
     const almostDoneTimer: SessionTimer = {
       preset: mockPreset,
@@ -125,7 +125,7 @@ describe("session-storage (Persistência do Temporizador da Sessão no localStor
     const longAfterEnd = BASE_NOW + 50 * 60 * 1000;
     const restored = loadSessionTimer(mockPreset, longAfterEnd);
 
-    // Conforme RN-08: todas as fases previstas venceram -> status concluído
+    // Todas as fases previstas venceram -> status concluído
     expect(restored.phase).toBe("completed");
     expect(restored.stage).toBe("TPL");
     expect(restored.completedCycles).toBe(4);

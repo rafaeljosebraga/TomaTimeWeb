@@ -66,7 +66,7 @@ export function loadPresets(): TimerPreset[] {
     const raw =
       localStorage.getItem(PRESET_STORAGE_KEYS.PRESETS) ??
       localStorage.getItem(PRESET_STORAGE_KEYS.LEGACY_PRESETS);
-    if (!raw) {
+    if (raw === null) {
       // Inicializa com os presets padrão caso não haja nada salvo
       const defaults = [...DEFAULT_PRESETS];
       savePresets(defaults);
@@ -74,10 +74,14 @@ export function loadPresets(): TimerPreset[] {
     }
 
     const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
+    if (!Array.isArray(parsed)) {
       const defaults = [...DEFAULT_PRESETS];
       savePresets(defaults);
       return defaults;
+    }
+
+    if (parsed.length === 0) {
+      return [];
     }
 
     // Valida cada item lido do storage
@@ -87,12 +91,6 @@ export function loadPresets(): TimerPreset[] {
       if (validation.isValid) {
         validPresets.push(validation.data);
       }
-    }
-
-    if (validPresets.length === 0) {
-      const defaults = [...DEFAULT_PRESETS];
-      savePresets(defaults);
-      return defaults;
     }
 
     return validPresets;
@@ -108,7 +106,7 @@ export function getPresetById(id: string): TimerPreset | null {
 
 export function getActivePresetId(): string {
   const presets = loadPresets();
-  const fallbackId = presets[0]?.id ?? DEFAULT_PRESET_ID;
+  const fallbackId = presets[0]?.id ?? "";
 
   try {
     if (!isBrowserStorageAvailable()) {
@@ -122,7 +120,7 @@ export function getActivePresetId(): string {
       return activeId;
     }
 
-    // Se o ID salvo não existe na lista, redefine para o primeiro disponível
+    // Se o ID salvo não existe na lista, redefine para o primeiro disponível ou vazio
     setActivePresetId(fallbackId);
     return fallbackId;
   } catch {
@@ -167,13 +165,13 @@ export function updatePreset(
   id: string,
   input: Partial<Omit<TimerPreset, "id">>,
 ): ValidationResult<TimerPreset> {
-  // RN-01: Um preset em uso por sessão ativa não pode ser editado nem excluído
+  // Um preset em uso por sessão ativa não pode ser editado nem excluído
   if (isPresetInUse(id)) {
     return {
       isValid: false,
       errors: {
         name: [
-          "Este preset está em uso por uma sessão ativa e não pode ser editado (RN-01).",
+          "Este preset está em uso por uma sessão ativa e não pode ser editado.",
         ],
       },
     };
@@ -211,23 +209,16 @@ export function updatePreset(
 }
 
 export function deletePreset(id: string): StorageActionResult<{ deletedId: string }> {
-  // RN-01: Um preset em uso por sessão ativa não pode ser editado nem excluído
+  // Um preset em uso por sessão ativa não pode ser editado nem excluído
   if (isPresetInUse(id)) {
     return {
       success: false,
       error:
-        "Este preset está em uso por uma sessão ativa e não pode ser excluído (RN-01).",
+        "Este preset está em uso por uma sessão ativa e não pode ser excluído.",
     };
   }
 
   const presets = loadPresets();
-
-  if (presets.length <= 1) {
-    return {
-      success: false,
-      error: "Não é possível excluir o único preset restante.",
-    };
-  }
 
   const targetExists = presets.some((p) => p.id === id);
   if (!targetExists) {
@@ -240,9 +231,9 @@ export function deletePreset(id: string): StorageActionResult<{ deletedId: strin
   const remainingPresets = presets.filter((p) => p.id !== id);
   savePresets(remainingPresets);
 
-  // Se o preset excluído era o ativo, atualiza o ativo para o primeiro remanescente
+  // Se o preset excluído era o ativo, atualiza o ativo para o primeiro remanescente ou vazio
   if (getActivePresetId() === id) {
-    const nextActiveId = remainingPresets[0]?.id ?? DEFAULT_PRESET_ID;
+    const nextActiveId = remainingPresets[0]?.id ?? "";
     setActivePresetId(nextActiveId);
   }
 
