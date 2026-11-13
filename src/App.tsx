@@ -525,17 +525,6 @@ export function App() {
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
           <QuickActionSidebar
-            presets={presets}
-            activePresetId={activePresetId}
-            formData={formData}
-            editingId={editingId}
-            formErrors={formErrors}
-            onFormDataChange={setFormData}
-            onSavePreset={handleSavePreset}
-            onSelectActivePreset={handleSelectActivePreset}
-            onStartEdit={handleStartEdit}
-            onCancelEdit={handleCancelEdit}
-            onRequestDeletePreset={handleRequestDeletePreset}
           />
 
           {/* Layout Principal com Transição do Painel de Tarefas */}
