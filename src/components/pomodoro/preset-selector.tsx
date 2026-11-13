@@ -48,11 +48,17 @@ export function PresetSelector({
         <Button
           type="button"
           variant="outline"
-          className="h-8 w-full min-w-32 max-w-full justify-between rounded-xl border-neutral-300/80 bg-white px-3 text-xs font-semibold text-neutral-900 shadow-xs transition-colors hover:bg-neutral-50 dark:border-neutral-700/80 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-750 sm:h-9 sm:w-auto sm:max-w-52"
+          className="h-8 w-full min-w-32 max-w-full justify-between rounded-xl border-neutral-300/80 bg-white px-3 text-xs font-semibold text-neutral-900 shadow-xs transition-all duration-300 hover:bg-neutral-50 dark:border-neutral-700/80 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-750 sm:h-9 sm:w-auto sm:max-w-52 active:scale-95"
           aria-label="Selecionar preset do timer"
         >
-          <span className="truncate">{activePreset?.name ?? "Escolha um preset"}</span>
-          <ChevronDown className="ml-2 size-3.5 shrink-0 opacity-60" />
+          <span key={activePresetId} className="truncate transition-opacity duration-300 animate-in fade-in-50">
+            {activePreset?.name ?? "Escolha um preset"}
+          </span>
+          <ChevronDown
+            className={`ml-2 size-3.5 shrink-0 opacity-60 transition-transform duration-300 ease-out ${
+              open ? "rotate-180" : "rotate-0"
+            }`}
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

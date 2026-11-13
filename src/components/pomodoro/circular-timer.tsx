@@ -110,7 +110,11 @@ export function CircularTimer({
     >
       {/* 1. ESTILO ANEL: Anel clássico contínuo */}
       {timerStyle === "ring" && (
-        <svg viewBox="0 0 240 240" className="size-full -rotate-90">
+        <svg
+          key="style-ring"
+          viewBox="0 0 240 240"
+          className="size-full -rotate-90 animate-timer-style-appear"
+        >
           <defs>
             <filter id="ring-glow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow
@@ -155,7 +159,11 @@ export function CircularTimer({
 
       {/* 2. ESTILO MARCADORES: Cada tracinho individual preenche com a cor da fase (verde/amarelo/vermelho), mantendo exatamente o mesmo tamanho e glow vibrante */}
       {timerStyle === "ticks" && (
-        <svg viewBox="0 0 240 240" className="size-full">
+        <svg
+          key="style-ticks"
+          viewBox="0 0 240 240"
+          className="size-full animate-timer-style-appear"
+        >
           <g>
             {ticks.map(({ index, angle }) => {
               const isActive = index < activeTicksCount;
@@ -191,7 +199,10 @@ export function CircularTimer({
 
       {/* 3. ESTILO APENAS NÚMEROS: Sem anel/tracinhos */}
       {timerStyle === "minimal" && (
-        <div className="size-full rounded-full border border-dashed border-border/40 bg-muted/5 flex items-center justify-center" />
+        <div
+          key="style-minimal"
+          className="size-full rounded-full border border-dashed border-border/40 bg-muted/5 flex items-center justify-center animate-timer-style-appear"
+        />
       )}
 
       {/* Conteúdo Central Compartilhado */}

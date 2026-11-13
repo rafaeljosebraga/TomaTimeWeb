@@ -157,16 +157,19 @@ export function TimerPanel({
         <Separator className="w-full max-w-md" />
 
         {/* Seletor de preset ativo com visual moderno em card pill */}
-        <div className="flex w-full max-w-md flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 rounded-2xl border border-neutral-200/80 bg-neutral-100/90 dark:border-neutral-800 dark:bg-neutral-900/90 p-2.5 sm:px-3.5 shadow-2xs">
+        <div className="flex w-full max-w-md flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 rounded-2xl border border-neutral-200/80 bg-neutral-100/90 dark:border-neutral-800 dark:bg-neutral-900/90 p-2.5 sm:px-3.5 shadow-2xs transition-all duration-300">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200/90 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 shadow-2xs transition-colors">
-              <TimerIcon className="size-3.5 sm:size-4" aria-hidden="true" />
+            <div className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200/90 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 shadow-2xs transition-all duration-300">
+              <TimerIcon className="size-3.5 sm:size-4 transition-transform duration-300" aria-hidden="true" />
             </div>
             <div className="flex flex-col text-left min-w-0">
               <span className="text-[10px] sm:text-[11px] font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider">
                 Preset de estudo
               </span>
-              <span className="text-[11px] sm:text-xs font-medium text-neutral-600 dark:text-neutral-400">
+              <span
+                key={activePresetId}
+                className="text-[11px] sm:text-xs font-medium text-neutral-600 dark:text-neutral-400 transition-opacity duration-300 animate-in fade-in-50"
+              >
                 {activePreset
                   ? `${activePreset.focusMinutes}m · ${activePreset.shortBreakMinutes}m · ${activePreset.cyclesBeforeLongBreak} ciclos`
                   : "Selecione o ritmo"}

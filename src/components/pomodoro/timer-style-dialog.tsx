@@ -21,31 +21,36 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
   const [isMounted, setIsMounted] = React.useState(open);
   const dragStartYRef = React.useRef<number | null>(null);
 
+  const isClosingRef = React.useRef(false);
+
   const handleSelect = (id: TimerStyle) => {
     setTimerStyle(id);
   };
 
   const handleClose = React.useCallback(() => {
-    if (isClosing) return;
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
       setIsMounted(false);
       setDragOffsetY(0);
+      isClosingRef.current = false;
       onOpenChange(false);
     }, 240);
-  }, [isClosing, onOpenChange]);
+  }, [onOpenChange]);
 
   // Sincroniza abertura/fechamento externo com a animação
   React.useEffect(() => {
     if (open) {
+      isClosingRef.current = false;
       setIsMounted(true);
       setIsClosing(false);
-    } else if (isMounted && !isClosing) {
-      // Se 'open' mudou para false externamente (ex: clique no botão da barra lateral)
+    } else if (isMounted && !isClosingRef.current) {
+      // Se 'open' mudou para false externamente
       handleClose();
     }
-  }, [open, isMounted, isClosing, handleClose]);
+  }, [open, isMounted, handleClose]);
 
   // Fecha com a tecla ESC
   React.useEffect(() => {
