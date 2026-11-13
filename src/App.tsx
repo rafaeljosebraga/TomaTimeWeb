@@ -57,6 +57,7 @@ import { DeleteDialog } from "@/components/pomodoro/delete-dialog";
 import { ConfirmDialog, type ConfirmAction } from "@/components/pomodoro/confirm-dialog";
 import { QuickActionSidebar } from "@/components/pomodoro/quick-action-sidebar";
 import { BottomControlBar } from "@/components/pomodoro/bottom-control-bar";
+import { PresetEditorDialog } from "@/components/pomodoro/preset-editor-dialog";
 
 type PendingDelete = {
   type: "preset" | "task";
@@ -116,6 +117,7 @@ export function App() {
   const [formData, setFormData] = useState<PresetFormData>(INITIAL_FORM_DATA);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<PresetValidationErrors>({});
+  const [isPresetEditorOpen, setIsPresetEditorOpen] = useState(false);
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
 
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
@@ -285,6 +287,7 @@ export function App() {
 
   // Prepara formulário para editar um preset existente
   function handleStartEdit(preset: TimerPreset) {
+    setIsPresetEditorOpen(true);
     setEditingId(preset.id);
     setFormData({
       name: preset.name,
@@ -297,7 +300,16 @@ export function App() {
     setGlobalMessage(null);
   }
 
+  function handleStartCreatePreset() {
+    setIsPresetEditorOpen(true);
+    setEditingId(null);
+    setFormData(INITIAL_FORM_DATA);
+    setFormErrors({});
+    setGlobalMessage(null);
+  }
+
   function handleCancelEdit() {
+    setIsPresetEditorOpen(false);
     setEditingId(null);
     setFormData(INITIAL_FORM_DATA);
     setFormErrors({});
@@ -333,7 +345,7 @@ export function App() {
       const reloaded = loadPresets();
       setPresets(reloaded);
       setGlobalMessage(`Preset "${result.data.name}" criado com sucesso.`);
-      setFormData(INITIAL_FORM_DATA);
+      handleCancelEdit();
     }
   }
 
@@ -515,17 +527,6 @@ export function App() {
 
           {/* Barra Flutuante Lateral Estilo Pomodoro Online (Cor e Configurações) */}
           <QuickActionSidebar
-            presets={presets}
-            activePresetId={activePresetId}
-            formData={formData}
-            editingId={editingId}
-            formErrors={formErrors}
-            onFormDataChange={setFormData}
-            onSavePreset={handleSavePreset}
-            onSelectActivePreset={handleSelectActivePreset}
-            onStartEdit={handleStartEdit}
-            onCancelEdit={handleCancelEdit}
-            onRequestDeletePreset={handleRequestDeletePreset}
           />
 
           {/* Layout Principal com Transição do Painel de Tarefas */}
@@ -547,6 +548,7 @@ export function App() {
                 onSkipStage={handleSkipStage}
                 onEndSession={handleEndSession}
                 onSelectActivePreset={handleSelectActivePreset}
+                onCreatePreset={handleStartCreatePreset}
                 onFormDataChange={setFormData}
                 onSavePreset={handleSavePreset}
                 onStartEdit={handleStartEdit}
@@ -723,6 +725,23 @@ export function App() {
           onFormDataChange={setTaskFormData}
           onSubmit={handleTaskFormSubmit}
           onCancel={handleCancelEditTask}
+        />
+
+        <PresetEditorDialog
+          open={isPresetEditorOpen}
+          editingId={editingId}
+          formData={formData}
+          formErrors={formErrors}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleCancelEdit();
+            } else {
+              setIsPresetEditorOpen(true);
+            }
+          }}
+          onFormDataChange={setFormData}
+          onSave={handleSavePreset}
+          onCancel={handleCancelEdit}
         />
 
         {/* Diálogo de Confirmação Genérica (UC07, UC08, UC11) */}

@@ -12,13 +12,6 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   STAGE_DISPLAY_NAMES,
@@ -32,6 +25,7 @@ import {
   getRemainingSeconds,
 } from "@/lib/domain/session-timer";
 import { CircularTimer } from "./circular-timer";
+import { PresetSelector } from "./preset-selector";
 
 type PresetFormData = {
   name: string;
@@ -56,6 +50,7 @@ interface TimerPanelProps {
   onSkipStage: () => void;
   onEndSession: () => void;
   onSelectActivePreset: (id: string) => void;
+  onCreatePreset: () => void;
   onFormDataChange: (data: PresetFormData) => void;
   onSavePreset: (e: React.FormEvent) => void;
   onStartEdit: (preset: TimerPreset) => void;
@@ -84,6 +79,7 @@ export function TimerPanel({
   onSkipStage,
   onEndSession,
   onSelectActivePreset,
+  onCreatePreset,
   onFormDataChange,
   onSavePreset,
   onStartEdit,
@@ -174,26 +170,14 @@ export function TimerPanel({
             </div>
           </div>
 
-          <Select value={activePresetId} onValueChange={onSelectActivePreset}>
-            <SelectTrigger
-              className="h-8 sm:h-9 w-full sm:w-auto sm:min-w-32 sm:max-w-44 rounded-xl border border-neutral-300/80 bg-white dark:border-neutral-700/80 dark:bg-neutral-800 font-semibold text-xs text-neutral-900 dark:text-neutral-50 shadow-xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-colors shrink-0"
-              aria-label="Selecionar preset do timer"
-            >
-              <span className="truncate">{activePreset?.name ?? "Escolha um preset"}</span>
-            </SelectTrigger>
-            <SelectContent align="end" className="rounded-2xl border-border/80 p-1.5 shadow-xl">
-              {presets.map((p) => (
-                <SelectItem key={p.id} value={p.id} className="rounded-xl py-2">
-                  <div className="flex flex-col text-left gap-0.5">
-                    <span className="font-semibold text-xs text-foreground truncate">{p.name}</span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {p.focusMinutes}m foco · {p.shortBreakMinutes}m pausa · {p.cyclesBeforeLongBreak} ciclos
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <PresetSelector
+            presets={presets}
+            activePresetId={activePresetId}
+            onSelect={onSelectActivePreset}
+            onCreate={onCreatePreset}
+            onEdit={onStartEdit}
+            onDelete={onRequestDeletePreset}
+          />
         </div>
       </CardContent>
     </Card>
