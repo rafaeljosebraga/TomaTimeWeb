@@ -41,7 +41,7 @@ export function PresetEditorDialog({
 }: PresetEditorDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent mobilePresentation="sheet" className="preset-editor-sheet">
         <DialogHeader className="gap-1 text-left">
           <DialogTitle className="text-lg font-bold text-foreground">
             {editingId ? "Editar Preset" : "Criar Preset"}

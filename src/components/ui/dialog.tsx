@@ -158,6 +158,7 @@ export const DialogContent = React.forwardRef<
           "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:max-h-[85vh] sm:rounded-2xl sm:border",
           className
         )}
+        data-mobile-presentation={mobilePresentation}
         {...props}
       >
         <DialogPrimitive.Close
