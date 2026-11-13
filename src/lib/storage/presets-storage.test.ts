@@ -56,10 +56,10 @@ describe("presets-storage (CRUD no localStorage)", () => {
       expect(presets).toEqual(DEFAULT_PRESETS);
     });
 
-    it("deve recuperar com DEFAULT_PRESETS se a lista for vazia", () => {
+    it("deve manter a lista vazia se o usuário já possuir lista vazia salva", () => {
       localStorage.setItem(PRESET_STORAGE_KEYS.PRESETS, JSON.stringify([]));
       const presets = loadPresets();
-      expect(presets).toEqual(DEFAULT_PRESETS);
+      expect(presets).toEqual([]);
     });
   });
 
@@ -262,7 +262,7 @@ describe("presets-storage (CRUD no localStorage)", () => {
       }
     });
 
-    it("deve impedir a exclusão caso reste apenas 1 preset", () => {
+    it("deve permitir a exclusão do último preset restante", () => {
       const singlePreset: TimerPreset[] = [
         {
           id: "unico-preset",
@@ -274,15 +274,17 @@ describe("presets-storage (CRUD no localStorage)", () => {
         },
       ];
       savePresets(singlePreset);
+      setActivePresetId("unico-preset");
 
       const result = deletePreset("unico-preset");
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("Não é possível excluir o único preset restante.");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.deletedId).toBe("unico-preset");
       }
 
-      expect(loadPresets()).toHaveLength(1);
+      expect(loadPresets()).toHaveLength(0);
+      expect(getActivePresetId()).toBe("");
     });
 
     it("deve retornar erro se o ID não for encontrado", () => {

@@ -18,6 +18,7 @@ interface CircularTimerProps {
   completedCycles: number;
   cyclesBeforeLongBreak: number;
   onReset?: () => void;
+  hasNoPresets?: boolean;
 }
 
 const STAGE_CONFIG: Record<
@@ -74,15 +75,16 @@ export function CircularTimer({
   completedCycles,
   cyclesBeforeLongBreak,
   onReset,
+  hasNoPresets = false,
 }: CircularTimerProps) {
   const { timerStyle } = useTimerStyle();
   const cfg = STAGE_CONFIG[stage] ?? STAGE_CONFIG.TF;
-  const isRunning = phase === "running";
+  const isRunning = !hasNoPresets && phase === "running";
   const clampedProgress = Math.min(1, Math.max(0, progress));
   const offset = CIRCUMFERENCE * (1 - clampedProgress);
 
   // Quantidade de marcadores ativos preenchidos
-  const activeTicksCount = Math.round(clampedProgress * TOTAL_TICKS);
+  const activeTicksCount = hasNoPresets ? 0 : Math.round(clampedProgress * TOTAL_TICKS);
 
   // Marcadores radiais distribuídos igualmente ao redor do centro (120, 120)
   const ticks = useMemo(() => {
@@ -91,6 +93,16 @@ export function CircularTimer({
       return { index, angle };
     });
   }, []);
+
+  const badgeClass = hasNoPresets
+    ? "bg-neutral-500/10 text-neutral-600 ring-1 ring-inset ring-neutral-500/20 dark:text-neutral-400"
+    : cfg.pill;
+
+  const dotClass = hasNoPresets
+    ? "bg-neutral-400 dark:bg-neutral-600"
+    : `${cfg.dot} ${isRunning ? "animate-pulse" : ""}`;
+
+  const badgeName = hasNoPresets ? "Sem preset" : cfg.name;
 
   return (
     <div
@@ -136,7 +148,7 @@ export function CircularTimer({
             strokeDashoffset={offset}
             filter="url(#ring-glow)"
             style={{
-              opacity: clampedProgress > 0 ? 1 : 0,
+              opacity: !hasNoPresets && clampedProgress > 0 ? 1 : 0,
             }}
             className={`${cfg.ring} transition-[stroke-dashoffset,opacity] ${
               isRunning ? "duration-1000 ease-linear" : "duration-300 ease-out"
@@ -191,17 +203,15 @@ export function CircularTimer({
         {/* Top: Pill de status */}
         <div className="h-8 sm:h-9 flex items-center justify-center pointer-events-auto">
           <span
-            className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3.5 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${cfg.pill}`}
+            className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3.5 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${badgeClass}`}
           >
             <span
               aria-hidden
-              className={`size-1.5 sm:size-2 rounded-full ${cfg.dot} ${
-                isRunning ? "animate-pulse" : ""
-              }`}
+              className={`size-1.5 sm:size-2 rounded-full ${dotClass}`}
             />
-            {cfg.name}
+            {badgeName}
             <span className="sr-only">
-              {isRunning ? "em andamento" : phase === "paused" ? "pausado" : "parado"}
+              {hasNoPresets ? "sem preset" : isRunning ? "em andamento" : phase === "paused" ? "pausado" : "parado"}
             </span>
           </span>
         </div>
@@ -220,7 +230,7 @@ export function CircularTimer({
 
         {/* Bottom: Botão Zerar com mesma altura reservada para manter o centro perfeito */}
         <div className="h-8 sm:h-9 flex items-center justify-center pointer-events-auto">
-          {onReset ? (
+          {!hasNoPresets && onReset ? (
             <button
               type="button"
               className="inline-flex items-center justify-center gap-1.5 rounded-full size-7 sm:size-auto sm:px-2.5 sm:py-1 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
