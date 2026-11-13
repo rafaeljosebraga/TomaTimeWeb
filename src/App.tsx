@@ -26,6 +26,7 @@ import {
   startSessionTimer,
   tickSessionTimer,
 } from "@/lib/domain/session-timer";
+import { getSessionEndConfirmation } from "@/lib/domain/session-end";
 import {
   createPreset,
   deletePreset,
@@ -222,23 +223,7 @@ export function App() {
   }
 
   function handleEndSession() {
-    setPendingConfirm({
-      type: "endSession",
-      title: "Encerrar Sessão",
-      description: "Deseja realmente encerrar a sessão ativa? O progresso do temporizador será removido.",
-      confirmLabel: "Encerrar Sessão",
-      isDestructive: true,
-    });
-  }
-
-  function handleDiscardResumedSession() {
-    setPendingConfirm({
-      type: "discardResumedSession",
-      title: "Descartar Sessão Retomada",
-      description: "Deseja descartar a sessão ativa retomada? Os dados em andamento serão apagados sem contabilização de progresso e o preset será liberado.",
-      confirmLabel: "Descartar Sessão",
-      isDestructive: true,
-    });
+    setPendingConfirm(getSessionEndConfirmation(isResumedSession));
   }
 
   function handleExecuteConfirmedAction() {
@@ -262,7 +247,7 @@ export function App() {
       setTimer(updated);
 
       if (pendingConfirm.type === "discardResumedSession") {
-        setGlobalMessage("Sessão retomada foi descartada com sucesso.");
+        setGlobalMessage("Sessão retomada foi encerrada com sucesso.");
       } else {
         setGlobalMessage("Sessão ativa encerrada.");
       }
