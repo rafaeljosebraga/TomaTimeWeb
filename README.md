@@ -165,21 +165,6 @@ npm run build:vite
 
 O GitHub Actions executa validações em pull requests e pushes para `main`, incluindo instalação das dependências, typecheck, testes automatizados e validação de build.
 
-## Escopo e limitações
-
-O projeto atualmente não contempla:
-
-- autenticação ou login;
-- backend ou banco de dados remoto;
-- sincronização entre dispositivos;
-- colaboração ou compartilhamento;
-- notificações push ou do navegador;
-- filtros, etiquetas ou subtarefas;
-- integração com calendários;
-- aplicativo nativo;
-- analytics, histórico ou gamificação;
-- internacionalização.
-
 ## Licença
 
 Não há uma licença de código definida no repositório neste momento.
