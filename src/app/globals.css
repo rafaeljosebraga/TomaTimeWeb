@@ -182,11 +182,11 @@
   }
   .dialog-content-animate[data-mobile-presentation="sheet"][data-sheet-motion="open"]:not(.dialog-dragged) {
     transform-origin: center bottom;
-    animation: slideUpSheet 1000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: slideUpSheet 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
   .dialog-content-animate[data-mobile-presentation="sheet"][data-sheet-motion="closing"] {
     transform-origin: center bottom;
-    animation: slideDownSheet 650ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+    animation: slideDownSheet 250ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
   }
 }
 
