@@ -167,13 +167,13 @@ export function updatePreset(
   id: string,
   input: Partial<Omit<TimerPreset, "id">>,
 ): ValidationResult<TimerPreset> {
-  // RN-01: Um preset em uso por sessão ativa não pode ser editado nem excluído
+  // Um preset em uso por sessão ativa não pode ser editado nem excluído
   if (isPresetInUse(id)) {
     return {
       isValid: false,
       errors: {
         name: [
-          "Este preset está em uso por uma sessão ativa e não pode ser editado (RN-01).",
+          "Este preset está em uso por uma sessão ativa e não pode ser editado.",
         ],
       },
     };
@@ -211,12 +211,12 @@ export function updatePreset(
 }
 
 export function deletePreset(id: string): StorageActionResult<{ deletedId: string }> {
-  // RN-01: Um preset em uso por sessão ativa não pode ser editado nem excluído
+  // Um preset em uso por sessão ativa não pode ser editado nem excluído
   if (isPresetInUse(id)) {
     return {
       success: false,
       error:
-        "Este preset está em uso por uma sessão ativa e não pode ser excluído (RN-01).",
+        "Este preset está em uso por uma sessão ativa e não pode ser excluído.",
     };
   }
 

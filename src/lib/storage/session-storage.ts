@@ -58,7 +58,7 @@ export function hasStoredActiveSession(): boolean {
 
 /**
  * Retorna o ID do preset atualmente em uso por uma sessão ativa
- * Regra RN-01 (bloqueio de edição/exclusão)
+ * (bloqueio de edição/exclusão)
  */
 export function getActiveSessionPresetId(): string | null {
   try {
@@ -71,7 +71,7 @@ export function getActiveSessionPresetId(): string | null {
     const parsed: unknown = JSON.parse(raw);
     if (!isValidStoredSession(parsed)) return null;
 
-    // Sessão ativa: em andamento ou pausada (RN-01)
+    // Sessão ativa: em andamento ou pausada
     if (parsed.phase === "running" || parsed.phase === "paused") {
       return parsed.preset.id;
     }
@@ -145,7 +145,7 @@ export function loadSessionTimer(
       durationMs: currentDurationMs,
     };
 
-    // UC10: Recalcula a sessão com base em timestamps e avanço sequencial (RN-06, RN-07, RN-08)
+    // Recalcula a sessão com base em timestamps e avanço sequencial
     const recalculatedTimer = recalculateSessionOnResume(baseRestoredTimer, now);
     saveSessionTimer(recalculatedTimer);
     return recalculatedTimer;

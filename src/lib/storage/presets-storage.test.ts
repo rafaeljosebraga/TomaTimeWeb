@@ -7,12 +7,15 @@ import {
   deletePreset,
   getActivePresetId,
   getPresetById,
+  isPresetInUse,
   loadPresets,
   resetToDefaultPresets,
   savePresets,
   setActivePresetId,
   updatePreset,
 } from "./presets-storage";
+import { saveSessionTimer, clearSessionTimer } from "./session-storage";
+import { createSessionTimer, startSessionTimer, pauseSessionTimer } from "@/lib/domain/session-timer";
 import type { TimerPreset } from "@/types/domain";
 
 describe("presets-storage (CRUD no localStorage)", () => {
@@ -160,6 +163,76 @@ describe("presets-storage (CRUD no localStorage)", () => {
         }
       }
     });
+
+    it("não deve permitir editar preset em uso por sessão em andamento (running)", () => {
+      const presets = loadPresets();
+      const target = presets[0];
+      expect(target).toBeDefined();
+
+      if (target) {
+        // Simula sessão ativa em andamento com este preset
+        const activeSession = startSessionTimer(createSessionTimer(target), Date.now());
+        saveSessionTimer(activeSession);
+
+        expect(isPresetInUse(target.id)).toBe(true);
+
+        const result = updatePreset(target.id, {
+          name: "Tentativa de Alteração",
+          focusMinutes: 45,
+        });
+
+        expect(result.isValid).toBe(false);
+        if (!result.isValid) {
+          expect(result.errors.name).toBeDefined();
+          expect(result.errors.name?.[0]).toContain("sessão ativa");
+        }
+
+        // Garante que o preset não foi alterado no storage
+        const current = getPresetById(target.id);
+        expect(current?.name).toBe(target.name);
+      }
+    });
+
+    it("não deve permitir editar preset em uso por sessão pausada (paused)", () => {
+      const presets = loadPresets();
+      const target = presets[0];
+      expect(target).toBeDefined();
+
+      if (target) {
+        // Simula sessão ativa pausada com este preset
+        const started = startSessionTimer(createSessionTimer(target), Date.now());
+        const pausedSession = pauseSessionTimer(started, Date.now() + 1000);
+        saveSessionTimer(pausedSession);
+
+        expect(isPresetInUse(target.id)).toBe(true);
+
+        const result = updatePreset(target.id, {
+          name: "Tentativa de Alteração Pausada",
+        });
+
+        expect(result.isValid).toBe(false);
+        if (!result.isValid) {
+          expect(result.errors.name?.[0]).toContain("sessão ativa");
+        }
+      }
+    });
+
+    it("deve permitir editar preset quando a sessão estiver concluída (completed) ou inexistente", () => {
+      const presets = loadPresets();
+      const target = presets[0];
+      expect(target).toBeDefined();
+
+      if (target) {
+        clearSessionTimer();
+        expect(isPresetInUse(target.id)).toBe(false);
+
+        const result = updatePreset(target.id, {
+          name: "Nome Permitido",
+        });
+
+        expect(result.isValid).toBe(true);
+      }
+    });
   });
 
   describe("deletePreset", () => {
@@ -217,6 +290,66 @@ describe("presets-storage (CRUD no localStorage)", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe("Preset não encontrado.");
+      }
+    });
+
+    it("não deve permitir excluir preset em uso por sessão em andamento (running)", () => {
+      const presets = loadPresets();
+      const target = presets[0];
+      expect(target).toBeDefined();
+
+      if (target) {
+        // Simula sessão ativa em andamento com este preset
+        const activeSession = startSessionTimer(createSessionTimer(target), Date.now());
+        saveSessionTimer(activeSession);
+
+        expect(isPresetInUse(target.id)).toBe(true);
+
+        const result = deletePreset(target.id);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toContain("sessão ativa");
+        }
+
+        // Garante que o preset permaneceu na lista
+        expect(getPresetById(target.id)).toBeDefined();
+      }
+    });
+
+    it("não deve permitir excluir preset em uso por sessão pausada (paused)", () => {
+      const presets = loadPresets();
+      const target = presets[0];
+      expect(target).toBeDefined();
+
+      if (target) {
+        // Simula sessão ativa pausada com este preset
+        const started = startSessionTimer(createSessionTimer(target), Date.now());
+        const pausedSession = pauseSessionTimer(started, Date.now() + 1000);
+        saveSessionTimer(pausedSession);
+
+        expect(isPresetInUse(target.id)).toBe(true);
+
+        const result = deletePreset(target.id);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toContain("sessão ativa");
+        }
+
+        expect(getPresetById(target.id)).toBeDefined();
+      }
+    });
+
+    it("deve permitir excluir preset quando não houver sessão ativa baseada nele", () => {
+      const presets = loadPresets();
+      const target = presets[0];
+      expect(target).toBeDefined();
+
+      if (target) {
+        clearSessionTimer();
+        expect(isPresetInUse(target.id)).toBe(false);
+
+        const result = deletePreset(target.id);
+        expect(result.success).toBe(true);
       }
     });
 

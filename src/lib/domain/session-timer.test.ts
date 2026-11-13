@@ -167,7 +167,7 @@ describe("Temporizador da Sessão baseado em Timestamp", () => {
     expect(reset.remainingMs).toBe(25 * 60 * 1000);
   });
 
-  it("deve zerar os ciclos concluídos e retornar ao primeiro ciclo de foco com resetCompletedCycles (RN-04 / UC07)", () => {
+  it("deve zerar os ciclos concluídos e retornar ao primeiro ciclo de foco com resetCompletedCycles", () => {
     // Simula uma sessão que estava no estágio de Pausa Longa (TPL), em andamento e com 8 ciclos concluídos
     const timerInLongBreak = {
       ...createSessionTimer(preset),

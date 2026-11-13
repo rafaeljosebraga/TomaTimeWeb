@@ -257,15 +257,14 @@ export function tickSessionTimer(
 }
 
 /**
- * UC10 - Retomar sessão automaticamente.
+ * Retomar sessão automaticamente.
  * Recalcula o estado do temporizador ao reabrir o navegador / recarregar a página com base em timestamps absolutos.
- * 
  */
 export function recalculateSessionOnResume(
   timer: SessionTimer,
   now: number = Date.now(),
 ): SessionTimer {
-  // RN-06: Se não estava rodando (pausada, idle ou concluída), preserva o estado sem avanço
+  // Se não estava rodando (pausada, idle ou concluída), preserva o estado sem avanço
   if (timer.phase !== "running" || timer.endsAt === null) {
     return timer;
   }
@@ -278,7 +277,7 @@ export function recalculateSessionOnResume(
     };
   }
 
-  // Se a fase que estava rodando era a Pausa Longa (TPL) e já expirou, a sessão foi concluída (RN-08)
+  // Se a fase que estava rodando era a Pausa Longa (TPL) e já expirou, a sessão foi concluída
   if (timer.stage === "TPL") {
     return {
       ...timer,
@@ -288,7 +287,7 @@ export function recalculateSessionOnResume(
     };
   }
 
-  // RN-07: A fase expirou durante o período fechado.
+  // A fase expirou durante o período fechado.
   // Avança sequencialmente pelas fases previstas até encontrar a fase vigente ou concluir a sessão.
   let currentStage: SessionStage = timer.stage;
   let currentCycles = timer.completedCycles;
@@ -321,7 +320,7 @@ export function recalculateSessionOnResume(
       };
     }
 
-    // Se esta fase também já expirou e era a Pausa Longa (TPL), encerra a sessão como concluída (RN-08)
+    // Se esta fase também já expirou e era a Pausa Longa (TPL), encerra a sessão como concluída
     if (currentStage === "TPL") {
       return {
         ...timer,
