@@ -1,8 +1,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
-  Edit2,
-  MoreVertical,
+  Pencil,
   Trash2,
   CheckCircle2,
   RotateCcw,
@@ -101,7 +100,8 @@ export function TaskItem({
 
   return (
     <li
-      className={`group flex items-start gap-3 rounded-2xl border p-4 transition-colors ${
+      data-task-id={task.id}
+      className={`group flex items-start gap-3 rounded-2xl border p-4 will-change-transform transition-[background-color,border-color,opacity,box-shadow] duration-300 ease-out ${
         task.state === "em execução"
           ? "border-emerald-500/50 bg-emerald-500/10 shadow-sm dark:bg-emerald-950/20 dark:border-emerald-500/40"
           : isDone
@@ -117,13 +117,13 @@ export function TaskItem({
             ? `Reabrir tarefa ${task.title}`
             : `Marcar tarefa ${task.title} como concluída`
         }
-        className="mt-0.5 size-5 rounded-md border-neutral-400 dark:border-neutral-600 data-[state=checked]:bg-neutral-900 data-[state=checked]:text-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-neutral-900"
+        className="mt-0.5 size-5 rounded-md border-neutral-400 dark:border-neutral-600 data-[state=checked]:bg-neutral-900 data-[state=checked]:text-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-neutral-900 transition-all duration-300"
       />
 
       <div className="min-w-0 flex-1">
         <p
-          className={`text-sm sm:text-base font-semibold leading-snug break-words ${
-            isDone ? "text-muted-foreground line-through opacity-70" : "text-neutral-900 dark:text-neutral-50"
+          className={`text-sm sm:text-base font-semibold leading-snug break-words transition-all duration-300 ease-out ${
+            isDone ? "text-muted-foreground line-through opacity-70" : "text-neutral-900 dark:text-neutral-50 opacity-100"
           }`}
           title={task.title}
         >
@@ -146,11 +146,11 @@ export function TaskItem({
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-neutral-200/60 dark:hover:bg-neutral-800"
-          aria-label={`Ações para tarefa ${task.title}`}
+          className="group/edit size-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors active:scale-90"
+          aria-label={`Editar tarefa ${task.title}`}
           onClick={() => setIsMobileSheetOpen(true)}
         >
-          <MoreVertical className="size-4" />
+          <Pencil className="size-3.5 sm:size-4 transition-transform duration-150 ease-out group-active/edit:scale-90 group-active/edit:-rotate-45" />
         </Button>
 
         <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>

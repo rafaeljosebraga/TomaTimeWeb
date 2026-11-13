@@ -524,13 +524,14 @@ export function App() {
           {/* Fio de gradiente decorativo na borda inferior */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent pointer-events-none" />
           <div className="mx-auto flex h-12 sm:h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              {/* Ícone restaurado para cor neutra (preto / foreground) */}
+            <div className="group flex items-center gap-2 sm:gap-2.5 select-none cursor-pointer">
+              {/* Ícone com animação interativa de cronômetro */}
               <TomatimerIcon
-                className="size-6 sm:size-7 shrink-0 text-foreground transition-colors"
+                className="size-6 sm:size-7 shrink-0 text-foreground transition-all duration-300"
+                isRunning={timer.phase === "running"}
                 aria-hidden
               />
-              <p className="text-sm font-bold tracking-tight">Tomatimer</p>
+              <p className="text-sm font-bold tracking-tight transition-colors group-hover:text-foreground/80">Tomatimer</p>
             </div>
 
             <div className="flex items-center gap-2">

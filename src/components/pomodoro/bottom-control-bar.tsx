@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Play,
   Pause,
@@ -39,6 +40,12 @@ export function BottomControlBar({
   hasNoPresets = false,
   onAddPreset,
 }: BottomControlBarProps) {
+  const [isResettingCycles, setIsResettingCycles] = useState(false);
+
+  const handleResetCyclesClick = () => {
+    setIsResettingCycles(true);
+    onResetCycles();
+  };
   return (
     <div className="fixed bottom-4 sm:bottom-6 left-0 right-0 z-40 flex items-center justify-center pointer-events-none px-2 sm:px-4">
       {/* Barra Cápsula Flutuante Fixa Centralizada Embaixo que acompanha a largura proporcional e permite rolagem com indicador discreto */}
@@ -51,12 +58,12 @@ export function BottomControlBar({
           variant="ghost"
           size="sm"
           disabled={hasNoPresets}
-          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 disabled:opacity-40 disabled:pointer-events-none"
+          className="group/skip size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none"
           onClick={onSkipStage}
           aria-label="Pular fase atual"
           title="Pular Fase"
         >
-          <SkipForward className="size-4 sm:mr-1" />
+          <SkipForward className="size-4 sm:mr-1 transition-transform duration-300 ease-out group-active/skip:translate-x-1 group-active/skip:scale-110" />
           <span className="hidden sm:inline">Pular</span>
         </Button>
 
@@ -65,12 +72,17 @@ export function BottomControlBar({
           variant="ghost"
           size="sm"
           disabled={hasNoPresets}
-          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 disabled:opacity-40 disabled:pointer-events-none"
-          onClick={onResetCycles}
+          className="group/cycles size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none"
+          onClick={handleResetCyclesClick}
           aria-label="Reiniciar contagem de ciclos"
           title="Reiniciar Ciclo"
         >
-          <RotateCcw className="size-4 sm:mr-1" />
+          <RotateCcw
+            onAnimationEnd={() => setIsResettingCycles(false)}
+            className={`size-4 sm:mr-1 shrink-0 ${
+              isResettingCycles ? "animate-spin-once-smooth" : ""
+            }`}
+          />
           <span className="hidden sm:inline">Ciclos</span>
         </Button>
 
@@ -89,41 +101,41 @@ export function BottomControlBar({
           ) : timer.phase === "idle" ? (
             <Button
               size="lg"
-              className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
+              className="group/btn h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
               onClick={onStart}
               aria-label="Iniciar temporizador"
             >
-              <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
+              <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1 transition-transform duration-200 ease-out group-hover/btn:scale-110 group-active/btn:scale-90" />
               Começar
             </Button>
           ) : timer.phase === "running" ? (
             <Button
               size="lg"
-              className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
+              className="group/btn h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
               onClick={onPause}
               aria-label="Pausar temporizador"
             >
-              <Pause className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
+              <Pause className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1 transition-transform duration-200 ease-out group-hover/btn:scale-110 group-active/btn:scale-90" />
               Pausar
             </Button>
           ) : timer.phase === "paused" ? (
             <Button
               size="lg"
-              className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
+              className="group/btn h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
               onClick={onResume}
               aria-label="Retomar temporizador"
             >
-              <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
+              <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1 transition-transform duration-200 ease-out group-hover/btn:scale-110 group-active/btn:scale-90" />
               Retomar
             </Button>
           ) : (
             <Button
               size="lg"
-              className="h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
+              className="group/btn h-11 sm:h-12 w-full sm:w-44 px-4 sm:px-8 rounded-full text-sm sm:text-base font-bold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 shadow-lg transition-transform hover:scale-105 active:scale-95 shrink-0"
               onClick={onStart}
               aria-label="Iniciar próxima fase"
             >
-              <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1" />
+              <Play className="size-4.5 sm:size-5 fill-current mr-0.5 sm:mr-1 transition-transform duration-200 ease-out group-hover/btn:scale-110 group-active/btn:scale-90" />
               Próxima Fase
             </Button>
           )}
@@ -150,12 +162,12 @@ export function BottomControlBar({
           variant="ghost"
           size="sm"
           disabled={hasNoPresets}
-          className="size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/10 dark:hover:text-red-400 dark:hover:bg-red-500/15 transition-colors shrink-0 disabled:opacity-40 disabled:pointer-events-none"
+          className="group/stop size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/10 dark:hover:text-red-400 dark:hover:bg-red-500/15 active:scale-95 transition-all shrink-0 disabled:opacity-40 disabled:pointer-events-none"
           onClick={onEndSession}
           aria-label="Encerrar sessão ativa"
           title="Encerrar Sessão"
         >
-          <Square className="size-4 sm:mr-1" />
+          <Square className="size-4 sm:mr-1 transition-transform duration-200 ease-out group-active/stop:scale-75 group-active/stop:rotate-6" />
           <span className="hidden sm:inline">Encerrar</span>
         </Button>
 
@@ -164,7 +176,7 @@ export function BottomControlBar({
           <Button
             variant="ghost"
             size="sm"
-            className={`size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium transition-colors shrink-0 ${
+            className={`group/tasks size-9 sm:h-10 sm:w-auto rounded-full p-0 sm:px-3 text-xs sm:text-sm font-medium transition-all active:scale-95 shrink-0 ${
               isTasksOpen
                 ? "bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 dark:hover:text-neutral-900"
                 : "text-muted-foreground hover:text-foreground"
@@ -174,7 +186,7 @@ export function BottomControlBar({
             aria-expanded={isTasksOpen}
             title={isTasksOpen ? "Fechar tarefas" : "Abrir tarefas"}
           >
-            <ListTodo className="size-4 sm:mr-1" />
+            <ListTodo className="size-4 sm:mr-1 transition-transform duration-200 ease-out group-active/tasks:scale-90 group-active/tasks:-translate-y-0.5" />
             <span className="hidden sm:inline">Tarefas</span>
           </Button>
         )}

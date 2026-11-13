@@ -55,7 +55,11 @@ export function PresetSelector({
           <ChevronDown className="ml-2 size-3.5 shrink-0 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl p-1.5">
+      <DropdownMenuContent
+        align="end"
+        collisionPadding={16}
+        className="w-[calc(100vw-2.5rem)] sm:w-80 max-w-sm rounded-2xl p-1.5"
+      >
         <div className="space-y-1" role="menu" aria-label="Presets de estudo">
           {presets.map((preset) => {
             const isActive = preset.id === activePresetId;
@@ -89,7 +93,7 @@ export function PresetSelector({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="group/preset-edit size-7 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors active:scale-90"
                   aria-label={`Editar ${preset.name}`}
                   title="Editar preset"
                   onPointerDown={(event) => event.stopPropagation()}
@@ -99,13 +103,13 @@ export function PresetSelector({
                     onEdit(preset);
                   }}
                 >
-                  <Pencil className="size-3.5" />
+                  <Pencil className="size-3.5 transition-transform duration-150 ease-out group-active/preset-edit:scale-90 group-active/preset-edit:-rotate-45" />
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 shrink-0 rounded-full text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                  className="group/preset-del size-7 shrink-0 rounded-full text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors active:scale-90"
                   aria-label={`Excluir ${preset.name}`}
                   title="Excluir preset"
                   onPointerDown={(event) => event.stopPropagation()}
@@ -115,24 +119,29 @@ export function PresetSelector({
                     onDelete(preset);
                   }}
                 >
-                  <Trash className="size-3.5" />
+                  <Trash className="size-3.5 transition-transform duration-150 ease-out group-active/preset-del:scale-90 group-active/preset-del:rotate-12" />
                 </Button>
               </div>
             );
           })}
         </div>
-        <DropdownMenuSeparator />
-        <button
-          type="button"
-          role="menuitem"
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-foreground outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
-          onClick={() => {
-            setOpen(false);
-            onCreate();
-          }}
-        >
-          <Plus className="size-4" /> Criar novo preset
-        </button>
+        <DropdownMenuSeparator className="my-1.5" />
+        <div className="pt-0.5">
+          <Button
+            type="button"
+            role="menuitem"
+            variant="default"
+            size="sm"
+            className="group/create w-full justify-center gap-2 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]"
+            onClick={() => {
+              setOpen(false);
+              onCreate();
+            }}
+          >
+            <Plus className="size-3.5 transition-transform duration-300 ease-out group-hover/create:rotate-90 group-active/create:scale-125" />
+            <span>Criar novo preset</span>
+          </Button>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

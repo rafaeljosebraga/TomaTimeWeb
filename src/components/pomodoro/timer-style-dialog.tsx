@@ -18,6 +18,7 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
   const [dragOffsetY, setDragOffsetY] = React.useState(0);
   const [isDraggingSheet, setIsDraggingSheet] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(open);
   const dragStartYRef = React.useRef<number | null>(null);
 
   const handleSelect = (id: TimerStyle) => {
@@ -29,14 +30,26 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
+      setIsMounted(false);
       setDragOffsetY(0);
       onOpenChange(false);
     }, 240);
   }, [isClosing, onOpenChange]);
 
+  // Sincroniza abertura/fechamento externo com a animação
+  React.useEffect(() => {
+    if (open) {
+      setIsMounted(true);
+      setIsClosing(false);
+    } else if (isMounted && !isClosing) {
+      // Se 'open' mudou para false externamente (ex: clique no botão da barra lateral)
+      handleClose();
+    }
+  }, [open, isMounted, isClosing, handleClose]);
+
   // Fecha com a tecla ESC
   React.useEffect(() => {
-    if (!open) return;
+    if (!isMounted) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         handleClose();
@@ -44,9 +57,9 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, handleClose]);
+  }, [isMounted, handleClose]);
 
-  if (!open && !isClosing) return null;
+  if (!isMounted) return null;
 
   return (
     <>
@@ -68,13 +81,16 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
         role="dialog"
         aria-modal="true"
         aria-label="Personalizar estética do temporizador"
-        style={{
-          transform:
-            dragOffsetY > 0 ? `translateY(${dragOffsetY}px)` : undefined,
-          transition: isDraggingSheet
-            ? "none"
-            : "transform 250ms cubic-bezier(0.16, 1, 0.3, 1)",
-        }}
+        style={
+          dragOffsetY > 0
+            ? {
+                transform: `translateY(${dragOffsetY}px)`,
+                transition: isDraggingSheet
+                  ? "none"
+                  : "transform 250ms cubic-bezier(0.16, 1, 0.3, 1)",
+              }
+            : undefined
+        }
         className={`fixed z-[60] w-full sm:w-[500px] md:w-[540px] max-h-[85vh] sm:max-h-[85vh] inset-x-0 bottom-0 sm:inset-auto sm:left-[88px] md:sm:left-[96px] sm:top-1/2 sm:-translate-y-1/2 rounded-t-3xl sm:rounded-3xl border border-border/90 bg-card/95 text-card-foreground shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl flex flex-col overflow-hidden will-change-transform ${
           isDraggingSheet
             ? ""
@@ -136,23 +152,23 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                   key={option.id}
                   type="button"
                   onClick={() => handleSelect(option.id)}
-                  className={`group relative flex flex-col items-stretch overflow-hidden rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  className={`group relative flex flex-col items-stretch overflow-hidden rounded-xl sm:rounded-2xl border text-left cursor-pointer transition-all duration-300 ease-out active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     isSelected
-                      ? "border-primary/80 ring-2 ring-primary/40 shadow-md bg-accent/40"
-                      : "border-border/70 hover:border-border hover:bg-muted/40 bg-card/60"
+                      ? "border-primary ring-2 ring-primary/40 shadow-md bg-accent/40 scale-[1.02]"
+                      : "border-border/70 hover:border-foreground/30 hover:bg-accent/20 hover:shadow-sm hover:-translate-y-0.5 bg-card/60"
                   }`}
                 >
                   {/* Badge de Check no canto superior direito quando selecionado */}
                   {isSelected && (
-                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex size-4 sm:size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex size-4 sm:size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm check-animate-in">
                       <Check className="size-2.5 sm:size-3 stroke-[3]" />
                     </div>
                   )}
 
                   {/* Prévia visual em miniatura */}
-                  <div className="flex h-20 sm:h-28 items-center justify-center p-1.5 sm:p-2 bg-muted/20">
+                  <div className="flex h-20 sm:h-28 items-center justify-center p-1.5 sm:p-2 bg-muted/20 transition-colors duration-300 group-hover:bg-muted/35">
                     {option.id === "ring" && (
-                      <div className="relative flex size-14 sm:size-20 items-center justify-center">
+                      <div className="relative flex size-14 sm:size-20 items-center justify-center transition-transform duration-300 ease-out group-hover:scale-105">
                         <svg viewBox="0 0 80 80" className="size-full -rotate-90">
                           <circle
                             cx="40"
@@ -173,7 +189,7 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                             strokeLinecap="round"
                             strokeDasharray={2 * Math.PI * 32}
                             strokeDashoffset={(2 * Math.PI * 32) * 0.25}
-                            className="text-primary"
+                            className="text-primary transition-all duration-500"
                           />
                         </svg>
                         <span className="absolute font-sans text-[11px] sm:text-sm font-bold tracking-tight text-foreground">
@@ -183,7 +199,7 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                     )}
 
                     {option.id === "ticks" && (
-                      <div className="relative flex size-14 sm:size-20 items-center justify-center">
+                      <div className="relative flex size-14 sm:size-20 items-center justify-center transition-transform duration-300 ease-out group-hover:scale-105">
                         <svg viewBox="0 0 80 80" className="size-full">
                           {Array.from({ length: 36 }).map((_, i) => {
                             const angle = (i * 360) / 36;
@@ -215,7 +231,7 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
                     )}
 
                     {option.id === "minimal" && (
-                      <div className="relative flex size-14 sm:size-20 items-center justify-center rounded-full border border-dashed border-border/60 bg-muted/10">
+                      <div className="relative flex size-14 sm:size-20 items-center justify-center rounded-full border border-dashed border-border/60 bg-muted/10 transition-transform duration-300 ease-out group-hover:scale-105">
                         <span className="font-sans text-[11px] sm:text-sm font-bold tracking-tight text-foreground">
                           25:00
                         </span>
@@ -225,10 +241,10 @@ export function TimerStyleDialog({ open, onOpenChange }: TimerStyleDialogProps) 
 
                   {/* Faixa inferior com o nome do estilo */}
                   <div
-                    className={`px-1 py-1.5 sm:px-2 sm:py-2 text-center text-xs transition-colors ${
+                    className={`px-1 py-1.5 sm:px-2 sm:py-2 text-center text-xs transition-colors duration-300 ${
                       isSelected
                         ? "bg-primary text-primary-foreground font-semibold"
-                        : "bg-muted/50 text-muted-foreground group-hover:text-foreground font-medium"
+                        : "bg-muted/50 text-muted-foreground group-hover:bg-muted/70 group-hover:text-foreground font-medium"
                     }`}
                   >
                     <span className="block text-[10px] sm:text-xs leading-tight font-medium">

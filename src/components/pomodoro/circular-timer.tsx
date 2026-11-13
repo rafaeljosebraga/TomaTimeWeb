@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import type { SessionPhase, SessionStage } from "@/types/domain";
 import { useTimerStyle } from "@/components/theme/timer-style-provider";
@@ -27,8 +27,8 @@ const STAGE_CONFIG: Record<
     name: string;
     ring: string;
     activeColor: string;
-    pill: string;
-    dot: string;
+    ledColor: string;
+    ledGlow: string;
     text: string;
     filterId: string;
     glowColor: string;
@@ -38,8 +38,8 @@ const STAGE_CONFIG: Record<
     name: "Foco",
     ring: "stroke-emerald-600 dark:stroke-emerald-400 text-emerald-600 dark:text-emerald-400",
     activeColor: "#10b981", // verde esmeralda
-    pill: "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-500/25 dark:text-emerald-300",
-    dot: "bg-emerald-500",
+    ledColor: "bg-emerald-500 text-emerald-500",
+    ledGlow: "bg-emerald-400",
     text: "text-emerald-600 dark:text-emerald-400",
     filterId: "glow-focus",
     glowColor: "rgba(16, 185, 129, 0.45)",
@@ -48,8 +48,8 @@ const STAGE_CONFIG: Record<
     name: "Pausa Curta",
     ring: "stroke-amber-600 dark:stroke-amber-400 text-amber-600 dark:text-amber-400",
     activeColor: "#f59e0b", // âmbar/amarelo
-    pill: "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-500/25 dark:text-amber-300",
-    dot: "bg-amber-500",
+    ledColor: "bg-amber-500 text-amber-500",
+    ledGlow: "bg-amber-400",
     text: "text-amber-600 dark:text-amber-400",
     filterId: "glow-short-break",
     glowColor: "rgba(245, 158, 11, 0.45)",
@@ -58,8 +58,8 @@ const STAGE_CONFIG: Record<
     name: "Pausa Longa",
     ring: "stroke-rose-600 dark:stroke-rose-400 text-rose-600 dark:text-rose-400",
     activeColor: "#f43f5e", // rosa/vermelho
-    pill: "bg-rose-500/10 text-rose-700 ring-1 ring-inset ring-rose-500/25 dark:text-rose-300",
-    dot: "bg-rose-500",
+    ledColor: "bg-rose-500 text-rose-500",
+    ledGlow: "bg-rose-400",
     text: "text-rose-600 dark:text-rose-400",
     filterId: "glow-long-break",
     glowColor: "rgba(244, 63, 94, 0.45)",
@@ -78,6 +78,12 @@ export function CircularTimer({
   hasNoPresets = false,
 }: CircularTimerProps) {
   const { timerStyle } = useTimerStyle();
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetClick = () => {
+    setIsResetting(true);
+    onReset?.();
+  };
   const cfg = STAGE_CONFIG[stage] ?? STAGE_CONFIG.TF;
   const isRunning = !hasNoPresets && phase === "running";
   const clampedProgress = Math.min(1, Math.max(0, progress));
@@ -93,16 +99,6 @@ export function CircularTimer({
       return { index, angle };
     });
   }, []);
-
-  const badgeClass = hasNoPresets
-    ? "bg-neutral-500/10 text-neutral-600 ring-1 ring-inset ring-neutral-500/20 dark:text-neutral-400"
-    : cfg.pill;
-
-  const dotClass = hasNoPresets
-    ? "bg-neutral-400 dark:bg-neutral-600"
-    : `${cfg.dot} ${isRunning ? "animate-pulse" : ""}`;
-
-  const badgeName = hasNoPresets ? "Sem preset" : cfg.name;
 
   return (
     <div
@@ -200,20 +196,34 @@ export function CircularTimer({
 
       {/* Conteúdo Central Compartilhado */}
       <div className="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none">
-        {/* Top: Pill de status */}
+        {/* Top: Modelo Flutuante Minimalista (Sem caixa ou pílula, foco na respiração do mostrador) */}
         <div className="h-8 sm:h-9 flex items-center justify-center pointer-events-auto">
-          <span
-            className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3.5 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors ${badgeClass}`}
-          >
-            <span
-              aria-hidden
-              className={`size-1.5 sm:size-2 rounded-full ${dotClass}`}
-            />
-            {badgeName}
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full transition-all">
+            {/* Ponto de acento orgânico com brilho sutil */}
+            <span className="relative flex size-2 items-center justify-center">
+              {isRunning && (
+                <span
+                  className={`absolute size-2.5 rounded-full ${cfg.ledGlow} opacity-60 animate-ping`}
+                />
+              )}
+              <span
+                className={`size-2 rounded-full ${
+                  hasNoPresets
+                    ? "bg-neutral-400 dark:bg-neutral-600"
+                    : `${cfg.ledColor} shadow-[0_0_8px_currentColor]`
+                } transition-colors`}
+              />
+            </span>
+
+            {/* Nome da fase elegante e nítido */}
+            <span className="text-xs sm:text-sm font-semibold tracking-wide text-foreground/90 select-none">
+              {hasNoPresets ? "Sem preset" : cfg.name}
+            </span>
+
             <span className="sr-only">
               {hasNoPresets ? "sem preset" : isRunning ? "em andamento" : phase === "paused" ? "pausado" : "parado"}
             </span>
-          </span>
+          </div>
         </div>
 
         {/* Center: Tempo (ancorado perfeitamente no centro do círculo) */}
@@ -233,12 +243,17 @@ export function CircularTimer({
           {!hasNoPresets && onReset ? (
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-1.5 rounded-full size-7 sm:size-auto sm:px-2.5 sm:py-1 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
-              onClick={onReset}
+              className="group inline-flex items-center justify-center gap-1.5 rounded-full size-7 sm:size-auto sm:px-2.5 sm:py-1 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0 active:scale-95"
+              onClick={handleResetClick}
               aria-label="Reiniciar tempo da fase atual"
               title="Zerar Fase"
             >
-              <RotateCcw className="size-3.5 sm:size-4 shrink-0" />
+              <RotateCcw
+                onAnimationEnd={() => setIsResetting(false)}
+                className={`size-3.5 sm:size-4 shrink-0 ${
+                  isResetting ? "animate-spin-once-smooth" : ""
+                }`}
+              />
               <span className="hidden sm:inline">Zerar</span>
             </button>
           ) : null}

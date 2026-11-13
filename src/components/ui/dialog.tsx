@@ -138,23 +138,24 @@ export const DialogContent = React.forwardRef<
     }, 50);
 
     if (dragOffsetYRef.current > 80) {
-      requestClose();
-      if (fallbackResetTimeoutRef.current !== null) {
-        window.clearTimeout(fallbackResetTimeoutRef.current);
-      }
-      fallbackResetTimeoutRef.current = window.setTimeout(() => {
-        updateDragOffset(0);
-        setHasDragged(false);
-        fallbackResetTimeoutRef.current = null;
-      }, 320);
+      triggerClose();
     } else {
       updateDragOffset(0);
     }
   };
 
   const triggerClose = () => {
-    updateDragOffset(0);
-    requestClose();
+    if (mobilePresentation === "sheet") {
+      setSheetMotionState("closing");
+      setTimeout(() => {
+        updateDragOffset(0);
+        setHasDragged(false);
+        requestClose();
+      }, 250);
+    } else {
+      updateDragOffset(0);
+      requestClose();
+    }
   };
 
   return (
