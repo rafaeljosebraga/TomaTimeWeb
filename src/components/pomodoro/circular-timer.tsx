@@ -110,91 +110,87 @@ export function CircularTimer({
     >
       {/* 1. ESTILO ANEL: Anel clássico contínuo */}
       {timerStyle === "ring" && (
-        <svg
-          key="style-ring"
-          viewBox="0 0 240 240"
-          className="size-full -rotate-90 animate-timer-style-appear"
-        >
-          <defs>
-            <filter id="ring-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow
-                dx="0"
-                dy="0"
-                stdDeviation="5"
-                floodColor={cfg.glowColor}
-              />
-            </filter>
-          </defs>
+        <div key="style-ring" className="size-full animate-timer-style-appear">
+          <svg viewBox="0 0 240 240" className="size-full -rotate-90">
+            <defs>
+              <filter id="ring-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  stdDeviation="5"
+                  floodColor={cfg.glowColor}
+                />
+              </filter>
+            </defs>
 
-          {/* Circunferência base inativa */}
-          <circle
-            cx="120"
-            cy="120"
-            r={RADIUS}
-            fill="none"
-            strokeWidth="10"
-            className="stroke-neutral-200 dark:stroke-neutral-800"
-          />
-          {/* Linha de progresso proporcional */}
-          <circle
-            cx="120"
-            cy="120"
-            r={RADIUS}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={offset}
-            filter="url(#ring-glow)"
-            style={{
-              opacity: !hasNoPresets && clampedProgress > 0 ? 1 : 0,
-            }}
-            className={`${cfg.ring} transition-[stroke-dashoffset,opacity] ${
-              isRunning ? "duration-1000 ease-linear" : "duration-300 ease-out"
-            }`}
-          />
-        </svg>
+            {/* Circunferência base inativa */}
+            <circle
+              cx="120"
+              cy="120"
+              r={RADIUS}
+              fill="none"
+              strokeWidth="10"
+              className="stroke-neutral-200 dark:stroke-neutral-800"
+            />
+            {/* Linha de progresso proporcional */}
+            <circle
+              cx="120"
+              cy="120"
+              r={RADIUS}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={offset}
+              filter="url(#ring-glow)"
+              style={{
+                opacity: !hasNoPresets && clampedProgress > 0 ? 1 : 0,
+              }}
+              className={`${cfg.ring} transition-[stroke-dashoffset,opacity] ${
+                isRunning ? "duration-1000 ease-linear" : "duration-300 ease-out"
+              }`}
+            />
+          </svg>
+        </div>
       )}
 
       {/* 2. ESTILO MARCADORES: Cada tracinho individual preenche com a cor da fase (verde/amarelo/vermelho), mantendo exatamente o mesmo tamanho e glow vibrante */}
       {timerStyle === "ticks" && (
-        <svg
-          key="style-ticks"
-          viewBox="0 0 240 240"
-          className="size-full animate-timer-style-appear"
-        >
-          <g>
-            {ticks.map(({ index, angle }) => {
-              const isActive = index < activeTicksCount;
-              return (
-                <line
-                  key={index}
-                  x1="120"
-                  y1="14"
-                  x2="120"
-                  y2="26"
-                  transform={`rotate(${angle} 120 120)`}
-                  stroke={isActive ? cfg.activeColor : "currentColor"}
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  style={
-                    isActive
-                      ? {
-                          filter: `drop-shadow(0 0 5px ${cfg.glowColor})`,
-                        }
-                      : undefined
-                  }
-                  className={
-                    isActive
-                      ? "transition-colors duration-200"
-                      : "text-neutral-400 dark:text-neutral-600 transition-colors duration-200"
-                  }
-                />
-              );
-            })}
-          </g>
-        </svg>
+        <div key="style-ticks" className="size-full animate-timer-style-appear">
+          <svg viewBox="0 0 240 240" className="size-full">
+            <g>
+              {ticks.map(({ index, angle }) => {
+                const isActive = index < activeTicksCount;
+                return (
+                  <line
+                    key={index}
+                    x1="120"
+                    y1="14"
+                    x2="120"
+                    y2="26"
+                    transform={`rotate(${angle} 120 120)`}
+                    stroke={isActive ? cfg.activeColor : "currentColor"}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    style={
+                      isActive
+                        ? {
+                            filter: `drop-shadow(0 0 5px ${cfg.glowColor})`,
+                          }
+                        : undefined
+                    }
+                    className={
+                      isActive
+                        ? "transition-colors duration-200"
+                        : "text-neutral-400 dark:text-neutral-600 transition-colors duration-200"
+                    }
+                  />
+                );
+              })}
+            </g>
+          </svg>
+        </div>
       )}
 
       {/* 3. ESTILO APENAS NÚMEROS: Sem anel/tracinhos */}
