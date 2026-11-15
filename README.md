@@ -15,6 +15,30 @@ O projeto foi desenvolvido para estudantes que desejam organizar sessões de est
 
 O sistema é single-user e executa inteiramente no navegador. Não há autenticação, backend ou sincronização entre dispositivos.
 
+## Capturas de Tela
+
+### Tela Principal (Desktop)
+Visão centralizada com temporizador Pomodoro circular, indicador proporcional de preenchimento da fase atual, controles de ciclo e seleção de presets.
+
+![Tela Principal](public/tela-principal.png)
+
+### Personalização Visual
+Modal de estilos visuais do temporizador, permitindo alternar entre diferentes designs e paletas de cores.
+
+![Estilos Visuais](public/tela-esteticas.png)
+
+### Painel de Tarefas
+Painel lateral retrátil para criação e acompanhamento de tarefas de estudo categorizadas por prioridade e estado de execução.
+
+![Painel de Tarefas](public/tela-tarefas.png)
+
+### Interface Mobile
+Layout responsivo adaptado para dispositivos móveis, com controles otimizados para toque e gaveteiros inferiores retráteis.
+
+<p align="center">
+  <img src="public/tela-principal-mobile.png" alt="Interface Mobile" width="380" />
+</p>
+
 ## Funcionalidades
 
 ### Temporizador e sessões
